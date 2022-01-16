@@ -12,24 +12,28 @@ namespace AgeOfChess
             _map = map;
         }
 
-        public IEnumerable<Square> FindLegalDestinationSquares(Piece piece, Square sourceSquare, bool nestedCall = false)
+        /// <summary>
+        /// CheckingForChecks is for when we are finding legal moves for the OTHER player to see if we can move our king somewhere.
+        /// <br/>In that case we pretend we CAN capture our own pieces, and ignore the obstacle of the king we are checking so that it can't move away from us on that same diagonal or file.
+        /// </summary>
+        public IEnumerable<Square> FindLegalDestinationSquares(Piece piece, Square sourceSquare, bool checkingForChecks = false)
         {
             var legalSquares = new List<Square>();
 
             if (piece is Pawn)
             {
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, checkingForChecks, 1));
 
                 legalSquares.RemoveAll(e => e.Object != null && e.Object is Piece);
 
                 var legalCaptures = new List<Square>();
-                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, 1));
-                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, 1));
-                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, 1));
-                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, 1));
+                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, checkingForChecks, 1));
+                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, checkingForChecks, 1));
+                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, checkingForChecks, 1));
+                legalCaptures.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, checkingForChecks, 1));
 
                 legalCaptures.RemoveAll(e => e.Object == null || !(e.Object is Piece occupyingPiece && occupyingPiece.IsWhite != piece.IsWhite));
 
@@ -37,44 +41,44 @@ namespace AgeOfChess
             }
             else if (piece is King)
             {
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, 1));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, checkingForChecks, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, checkingForChecks, 1));
 
-                if (!nestedCall) // Prevents recursion if 2 kings are facing off
+                if (!checkingForChecks) // Prevents infinite recursion if 2 kings are facing off
                 {
-                    FindAllLegalMovesByColor(!piece.IsWhite);
+                    legalSquares.RemoveAll(e => FindChecksForColor(!piece.IsWhite).Contains(e));
                 }
             }
             else if (piece is Rook)
             {
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, checkingForChecks));
             }
             else if (piece is Bishop)
             {
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, checkingForChecks));
             }
             else if (piece is Queen)
             {
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare));
-                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.North, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.East, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.South, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, checkingForChecks));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, checkingForChecks));
             }
             else if (piece is Knight)
             {
@@ -90,13 +94,53 @@ namespace AgeOfChess
                 legalSquares.RemoveAll(e => e == null 
                     || e.Type == SquareType.DirtRocks 
                     || e.Type == SquareType.GrassRocks 
-                    || (e.Object != null && e.Object is Piece occupyingPiece && occupyingPiece.IsWhite == piece.IsWhite));
+                    || (!checkingForChecks && e.Object != null && e.Object is Piece occupyingPiece && occupyingPiece.IsWhite == piece.IsWhite));
             }
 
             return legalSquares;
         }
 
-        public IEnumerable<Square> FindLegalSquaresVector(Piece piece, Direction direction, Square sourceSquare, int? maxSteps = null)
+        public IEnumerable<Square> FindLegalPiecePlacementsAroundKing(Square kingSquare)
+        {
+            var legalSquares = new List<Square>();
+
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.North, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.NorthEast, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.East, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.SouthEast, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.South, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.SouthWest, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.West, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.NorthWest, kingSquare, true, 1));
+
+            return legalSquares.Where(e => e.Object == null);
+        }
+
+        public IEnumerable<Square> FindChecksForColor(bool isWhite)
+        {
+            var legalAttacks = new List<Square>();
+
+            foreach (Square pieceSquare in _map.Squares.Where(e => e.Object != null && e.Object is Piece piece && piece.IsWhite == isWhite))
+            {
+                Piece piece = (Piece)pieceSquare.Object;
+
+                if (piece is Pawn)
+                {
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, pieceSquare, true, 1));
+                }
+                else
+                {
+                    legalAttacks.AddRange(FindLegalDestinationSquares(piece, pieceSquare, true));
+                }
+            }
+
+            return legalAttacks;
+        }
+
+        private IEnumerable<Square> FindLegalSquaresVector(Piece piece, Direction direction, Square sourceSquare, bool checkingForChecks, int? maxSteps = null)
         {
             var legalSquares = new List<Square>();
 
@@ -140,21 +184,20 @@ namespace AgeOfChess
                 {
                     if (currentSquare.Object is Piece occupyingPiece)
                     {
-                        if (occupyingPiece.IsWhite != piece.IsWhite)
+                        if (occupyingPiece.IsWhite == piece.IsWhite && !checkingForChecks)
                         {
+                            break;
+                        }
+                        else if (occupyingPiece.IsWhite != piece.IsWhite && occupyingPiece is King && checkingForChecks)
+                        {
+                            stepsTaken++;
                             legalSquares.Add(currentSquare);
-                            break;
-                        }
-                        else
-                        {
-                            break;
+                            continue;
                         }
                     }
-                    else
-                    {
-                        legalSquares.Add(currentSquare);
-                        break;
-                    }
+
+                    legalSquares.Add(currentSquare);
+                    break;
                 }
 
                 stepsTaken++;
@@ -162,16 +205,6 @@ namespace AgeOfChess
             }
 
             return legalSquares;
-        }
-
-        public IEnumerable<Square> FindAllLegalMovesByColor(bool isWhite)
-        {
-            foreach (Square pieceSquare in _map.Squares.Where(e => e.Object != null && e.Object is Piece piece && piece.IsWhite == isWhite))
-            {
-                Piece piece = (Piece)pieceSquare.Object;
-
-
-            }
         }
     }
 }

@@ -93,12 +93,18 @@ namespace AgeOfChess
 
         private void AddObjectTextures(ContentManager contentManager)
         {
-            // Resources
+            // Gaia objects
             _objectTextures.Add(new PlaceableObjectTexture
             {
                 PlaceableObjectType = typeof(Treasure),
                 Texture = contentManager.Load<Texture2D>("objects/treasure")
+            }); 
+            _objectTextures.Add(new PlaceableObjectTexture
+            {
+                PlaceableObjectType = typeof(WhiteFlag),
+                Texture = contentManager.Load<Texture2D>("objects/white_flag")
             });
+
 
             // Pieces
             _objectTextures.Add(new PlaceableObjectTexture

@@ -61,13 +61,18 @@ namespace AgeOfChess
             _temporaryColor = color;
         }
 
+        public void ClearTemporaryColor()
+        {
+            _temporaryColor = SquareColor.None;
+        }
+
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_texture, _location, Microsoft.Xna.Framework.Color.White);
+            spriteBatch.Draw(_texture, _location, Color.White);
 
             if (_temporaryColor != SquareColor.None)
             {
-                spriteBatch.Draw(_textureLibrary.GetSquareColorByType(_temporaryColor), _location, Microsoft.Xna.Framework.Color.White);
+                spriteBatch.Draw(_textureLibrary.GetSquareColorByType(_temporaryColor), _location, Color.White);
             }
 
             if (Object != null)
@@ -77,14 +82,14 @@ namespace AgeOfChess
                     spriteBatch.Draw(
                         _textureLibrary.GetSquareColorByType(SquareColor.Blue),
                         _location,
-                        Microsoft.Xna.Framework.Color.White);
+                        Color.White);
                 }
-                else if (Object is Piece && (Type == SquareType.DirtMine || Type == SquareType.GrassMine))
+                else if (_temporaryColor == SquareColor.None && Object is Piece && (Type == SquareType.DirtMine || Type == SquareType.GrassMine))
                 {
                     spriteBatch.Draw(
                         _textureLibrary.GetSquareColorByType(SquareColor.Orange),
                         _location,
-                        Microsoft.Xna.Framework.Color.White);
+                        Color.White);
                 }
 
                 Object.Draw(spriteBatch, _objectLocation);

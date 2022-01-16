@@ -39,8 +39,8 @@ namespace AgeOfChess
                 new Button(textureLibrary, fontLibrary, new Rectangle(230, 265, 40, 22), ButtonType.TimeIncrementSecondsPlus10, "+10"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(275, 265, 25, 22), ButtonType.TimeIncrementSecondsMinus1, "-1"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(305, 265, 40, 22), ButtonType.TimeIncrementSecondsMinus10, "-10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 290, WindowHeight - 70, 120, 35), ButtonType.StartGame, "Start game"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 160, WindowHeight - 70, 120, 35), ButtonType.Back, "Back"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 290, WindowHeight - 70, 120, 35), ButtonType.Back, "Back"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 160, WindowHeight - 70, 120, 35), ButtonType.StartGame, "Start game")
             };
         }
 
@@ -71,25 +71,32 @@ namespace AgeOfChess
             {
                 GameSettings.TimeControlEnabled = !GameSettings.TimeControlEnabled;
 
+                var buttons = Buttons
+                    .Where(e => new List<ButtonType>
+                    {
+                        ButtonType.StartTimeMinutesPlus1,
+                        ButtonType.StartTimeMinutesPlus10,
+                        ButtonType.StartTimeMinutesMinus1,
+                        ButtonType.StartTimeMinutesMinus10,
+                        ButtonType.TimeIncrementSecondsPlus1,
+                        ButtonType.TimeIncrementSecondsPlus10,
+                        ButtonType.TimeIncrementSecondsMinus1,
+                        ButtonType.TimeIncrementSecondsMinus10
+                    }
+                    .Contains(e.Type));
+
                 if (!GameSettings.TimeControlEnabled)
                 {
-                    var buttonsToDisable = Buttons
-                        .Where(e => new List<ButtonType>
-                        {
-                            ButtonType.StartTimeMinutesPlus1,
-                            ButtonType.StartTimeMinutesPlus10,
-                            ButtonType.StartTimeMinutesMinus1,
-                            ButtonType.StartTimeMinutesMinus10,
-                            ButtonType.TimeIncrementSecondsPlus1,
-                            ButtonType.TimeIncrementSecondsPlus10,
-                            ButtonType.TimeIncrementSecondsMinus1,
-                            ButtonType.TimeIncrementSecondsMinus10
-                        }
-                        .Contains(e.Type));
-
-                    foreach (Button btn in buttonsToDisable)
+                    foreach (Button btn in buttons)
                     {
                         btn.IsEnabled = false;
+                    }
+                }
+                else
+                {
+                    foreach (Button btn in buttons)
+                    {
+                        btn.IsEnabled = true;
                     }
                 }
             }
@@ -246,7 +253,7 @@ namespace AgeOfChess
 
             if (TextNotification != null)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFont, TextNotification.Message, new Vector2(20, WindowHeight - 60), TextNotification.Color);
+                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(20, WindowHeight - 60), TextNotification.Color);
             }
         }
 

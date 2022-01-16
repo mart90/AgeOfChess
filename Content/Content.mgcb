@@ -92,12 +92,12 @@
 /processorParam:TextureFormat=Compressed
 /build:fonts/defaultFont.spritefont
 
-#begin fonts/size5.spritefont
+#begin fonts/defaultFontBold.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
-/build:fonts/size5.spritefont
+/build:fonts/defaultFontBold.spritefont
 
 #begin objects/b_bishop.png
 /importer:TextureImporter
@@ -254,6 +254,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:objects/w_rook.png
+
+#begin objects/white_flag.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:objects/white_flag.png
 
 #begin squares/dirt.png
 /importer:TextureImporter

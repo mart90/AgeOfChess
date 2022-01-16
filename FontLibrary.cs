@@ -6,12 +6,12 @@ namespace AgeOfChess
     class FontLibrary
     {
         public SpriteFont DefaultFont { get; }
-        public SpriteFont Size5Font { get; }
+        public SpriteFont DefaultFontBold { get; }
 
         public FontLibrary(ContentManager contentManager)
         {
             DefaultFont = contentManager.Load<SpriteFont>("fonts/defaultFont");
-            Size5Font = contentManager.Load<SpriteFont>("fonts/size5");
+            DefaultFontBold = contentManager.Load<SpriteFont>("fonts/defaultFontBold");
         }
     }
 }

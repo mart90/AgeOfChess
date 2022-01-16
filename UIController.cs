@@ -49,16 +49,6 @@ namespace AgeOfChess
             _textureLibrary = new TextureLibrary(Content);
             _fontLibrary = new FontLibrary(Content);
 
-            //var gs = new SinglePlayerGameSettings()
-            //{
-            //    MapSize = 12,
-            //    TimeControlEnabled = false
-            //};
-
-            //NewSinglePlayerGame(gs);
-
-            //_appUIState = AppUIState.InGame;
-
             _components.Add(new Menu(_textureLibrary, _fontLibrary));
             _components.Add(new SinglePlayerGameSettingsForm(_textureLibrary, _fontLibrary));
         }

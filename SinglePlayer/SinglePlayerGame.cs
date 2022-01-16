@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace AgeOfChess
 {
@@ -6,6 +8,12 @@ namespace AgeOfChess
     {
         public SinglePlayerGame(SinglePlayerGameSettings settings, TextureLibrary textureLibrary, FontLibrary fontLibrary) : base(textureLibrary, fontLibrary)
         {
+            Colors = new List<PieceColor>()
+            {
+                new PieceColor(true, "you"),
+                new PieceColor(false, "you")
+            };
+
             MapGenerator mapGenerator = new MapGenerator(textureLibrary, 12);
 
             if (settings.MapSeed != null)
@@ -24,8 +32,9 @@ namespace AgeOfChess
             if (settings.TimeControlEnabled)
             {
                 TimeControlEnabled = true;
+                LastMoveTimeStamp = DateTime.Now;
                 TimeIncrementSeconds = settings.TimeIncrementSeconds;
-                Colors.ForEach(e => e.TimeMiliseconds = settings.StartTimeMinutes.Value * 6000);
+                Colors.ForEach(e => e.TimeMiliseconds = settings.StartTimeMinutes.Value * 60000);
             }
 
             AddDefaultButtons();
