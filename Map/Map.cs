@@ -116,7 +116,7 @@ namespace AgeOfChess
 
         public Square GetRandomEmptySquare(int startingSquare = 0, int endingSquare = 0)
         {
-            var randomEmptyType = _random.Next(0, 1) == 0 ? SquareType.Dirt : SquareType.Grass;
+            var randomEmptyType = _random.Next(0, 2) == 0 ? SquareType.Dirt : SquareType.Grass;
             return GetRandomSquareOfType(randomEmptyType, startingSquare, endingSquare);
         }
 

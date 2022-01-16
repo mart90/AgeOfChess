@@ -242,7 +242,7 @@ namespace AgeOfChess
 
             if (GameSettings.TimeControlEnabled)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Initial time (minutes):  {GameSettings.StartTimeMinutes}", new Vector2(20, 240), Color.White);
+                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Initial time (minutes): {GameSettings.StartTimeMinutes}", new Vector2(20, 240), Color.White);
                 spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Increment (seconds): {GameSettings.TimeIncrementSeconds}", new Vector2(20, 270), Color.White);
             }
 

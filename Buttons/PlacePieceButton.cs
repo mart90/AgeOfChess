@@ -19,31 +19,31 @@ namespace AgeOfChess
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteQueen));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackQueen));
-                PieceCost = 75;
+                PieceCost = 60;
             }
             else if (pieceType == typeof(Rook))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteRook));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackRook));
-                PieceCost = 40;
+                PieceCost = 30;
             }
             else if (pieceType == typeof(Bishop))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteBishop));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackBishop));
-                PieceCost = 30;
+                PieceCost = 20;
             }
             else if (pieceType == typeof(Knight))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteKnight));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackKnight));
-                PieceCost = 35;
+                PieceCost = 25;
             }
             else if (pieceType == typeof(Pawn))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhitePawn));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackPawn));
-                PieceCost = 25;
+                PieceCost = 15;
             }
         }
 

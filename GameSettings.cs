@@ -10,10 +10,10 @@
 
         public GameSettings()
         {
-            MapSize = 10;
+            MapSize = 12;
             TimeControlEnabled = true;
             StartTimeMinutes = 5;
-            TimeIncrementSeconds = 10;
+            TimeIncrementSeconds = 5;
         }
     }
 }

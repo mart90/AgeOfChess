@@ -100,18 +100,18 @@ namespace AgeOfChess
             return legalSquares;
         }
 
-        public IEnumerable<Square> FindLegalPiecePlacementsAroundKing(Square kingSquare)
+        public IEnumerable<Square> FindLegalPiecePlacementsAroundSquare(Square square)
         {
             var legalSquares = new List<Square>();
 
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.North, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.NorthEast, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.East, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.SouthEast, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.South, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.SouthWest, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.West, kingSquare, true, 1));
-            legalSquares.AddRange(FindLegalSquaresVector((King)kingSquare.Object, Direction.NorthWest, kingSquare, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.North, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.NorthEast, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.East, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.SouthEast, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.South, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.SouthWest, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.West, square, true, 1));
+            legalSquares.AddRange(FindLegalSquaresVector((Piece)square.Object, Direction.NorthWest, square, true, 1));
 
             return legalSquares.Where(e => e.Object == null);
         }

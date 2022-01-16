@@ -194,6 +194,8 @@ namespace AgeOfChess
 
         public bool AttemptMovePiece(Point location)
         {
+            // TODO check for illegal moves (king check)
+
             var destinationSquare = GetSquareByLocation(location);
             var sourceSquare = Map.SelectedSquare;
 
@@ -268,13 +270,14 @@ namespace AgeOfChess
         public IEnumerable<Square> FindLegalDestinationsForPiecePlacement(bool placingPawn = false)
         {
             var legalDestinations = new List<Square>();
+            var pathFinder = new PathFinder(Map);
 
             Square activePlayerKingSquare = Map.Squares.Single(e => e.Object != null 
                 && e.Object is Piece piece 
                 && piece.IsWhite == ActiveColor.IsWhite 
                 && piece is King);
 
-            legalDestinations.AddRange(new PathFinder(Map).FindLegalPiecePlacementsAroundKing(activePlayerKingSquare).ToList());
+            legalDestinations.AddRange(pathFinder.FindLegalPiecePlacementsAroundSquare(activePlayerKingSquare).ToList());
 
             if (placingPawn)
             {
@@ -288,7 +291,7 @@ namespace AgeOfChess
 
                 foreach (Square square in activePlayerOtherPieceSquares)
                 {
-                    legalDestinations.AddRange(Map.FindLegalDestinationsForPiece((Piece)activePlayerKingSquare.Object, square).Where(e => e.Object == null));
+                    legalDestinations.AddRange(pathFinder.FindLegalPiecePlacementsAroundSquare(square));
                 }
             }
 

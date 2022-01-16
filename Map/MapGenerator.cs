@@ -41,7 +41,7 @@ namespace AgeOfChess
             AddRandomlyGeneratedSquares(SquareType.DirtMine, 0.01);
             AddRandomlyGeneratedSquares(SquareType.GrassMine, 0.01);
 
-            AddRandomlyGeneratedGaiaObjects<Treasure>(0.05);
+            AddRandomlyGeneratedGaiaObjects<Treasure>(0.02);
 
             SpawnKings();
 
@@ -150,11 +150,10 @@ namespace AgeOfChess
             }
         }
 
-        public void AddRandomlyGeneratedGaiaObjects<T>(double fractionOfDirtSquares)
-            where T : GaiaObject
+        public void AddRandomlyGeneratedGaiaObjects<T>(double fractionOfEmptySquares) where T : GaiaObject
         {
-            IEnumerable<Square> dirtSquares = _map.GetSquaresByType(SquareType.Dirt);
-            int amountToAdd = (int)Math.Round(fractionOfDirtSquares * dirtSquares.Count());
+            IEnumerable<Square> emptySquares = _map.GetSquaresByType(SquareType.Dirt).Concat(_map.GetSquaresByType(SquareType.Grass));
+            int amountToAdd = (int)Math.Round(fractionOfEmptySquares * emptySquares.Count());
 
             if (amountToAdd < 2)
             {
