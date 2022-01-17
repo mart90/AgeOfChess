@@ -7,7 +7,7 @@ namespace AgeOfChess
     class Menu : IUiWindow
     {
         public AppUIState CorrespondingUiState { get; }
-        public List<Button> Buttons { get; set; }
+        public List<IUiPart> UiParts { get; set; }
         public AppUIState? NewUiState { get; set; }
         public int HeightPixels { get; }
         public int WidthPixels { get; }
@@ -18,29 +18,31 @@ namespace AgeOfChess
             HeightPixels = 600;
             WidthPixels = 600;
 
-            Buttons = new List<Button>
+            UiParts = new List<IUiPart>
             {
                 new Button(textureLibrary, fontLibrary, new Rectangle(225, 200, 150, 35), ButtonType.SinglePlayer, "Single player"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(225, 240, 150, 35), ButtonType.Multiplayer, "Multiplayer")
             };
         }
 
-        public void HandleLeftMouseClick(Point location)
-        {
-            ClickButtonByLocation(location);
-        }
-
         public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (Button button in Buttons)
+            foreach (IUiPart button in UiParts)
             {
                 button.Draw(spriteBatch);
             }
         }
 
-        public void ClickButtonByLocation(Point location)
+        public void ClickUiPartByLocation(Point location)
         {
-            var button = this.GetButtonByLocation(location);
+            var uiPart = this.GetUiPartByLocation(location);
+
+            if (uiPart == null)
+            {
+                return;
+            }
+
+            Button button = uiPart is Button b ? b : null;
 
             if (button == null)
             {
@@ -53,8 +55,12 @@ namespace AgeOfChess
             }
             else if (button.Type == ButtonType.Multiplayer)
             {
-                NewUiState = AppUIState.InLobbyBrowser;
+                NewUiState = AppUIState.InLoginScreen;
             }
+        }
+
+        public void ReceiveKeyboardInput(TextInputEventArgs args)
+        {
         }
     }
 }

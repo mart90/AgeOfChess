@@ -41,6 +41,7 @@
         InLoginScreen,
         InLobbyBrowser,
         InLobby,
+        CreatingLobby,
         InGame
     }
 
@@ -65,8 +66,10 @@
 
         Multiplayer,
         Login,
+        Register,
         CreateLobby,
         JoinLobby,
+        StartLobby,
 
         PasteMapSeed,
         MapSizeIncrease,
@@ -79,12 +82,15 @@
         TimeIncrementSecondsPlus1,
         TimeIncrementSecondsPlus10,
         TimeIncrementSecondsMinus1,
-        TimeIncrementSecondsMinus10
+        TimeIncrementSecondsMinus10,
+        BiddingToggle
     }
 
     enum TextBoxType
     {
-        MapSeed,
-        LobbyTitle
+        Username,
+        Password,
+        MinRating,
+        MaxRating
     }
 }

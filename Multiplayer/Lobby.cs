@@ -8,15 +8,9 @@ namespace AgeOfChess
         public DateTime CreatedAt { get; set; }
         public int HostId { get; set; }
         public DateTime HostLastPing { get; set; }
-        public string Title { get; set; }
         public string Status { get; set; }
-        public int BoardSize { get; set; }
-        public bool BiddingEnabled { get; set; }
-        public bool TimeControlEnabled { get; set; }
-        public int StartTimeMinutes { get; set; }
-        public int TimeIncrementSeconds { get; set; }
-        public int MinRating { get; set; }
-        public int MaxRating { get; set; }
-        public string MapSeed { get; set; }
+        public bool IsSelected { get; set; }
+
+        public MultiplayerGameSettings Settings { get; set; }
     }
 }

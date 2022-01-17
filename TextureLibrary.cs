@@ -13,6 +13,8 @@ namespace AgeOfChess
         private readonly List<SquareColorTexture> _colorTextures;
         private readonly List<ButtonTexture> _buttonTextures;
 
+        public Texture2D TextBoxTexture { get; }
+
         public TextureLibrary(ContentManager contentManager)
         {
             _squareTextures = new List<SquareTexture>();
@@ -24,6 +26,8 @@ namespace AgeOfChess
             AddObjectTextures(contentManager);
             AddColorTextures(contentManager);
             AddButtonTextures(contentManager);
+
+            TextBoxTexture = contentManager.Load<Texture2D>("textbox/textbox");
         }
 
         public Texture2D GetObjectTextureByType(Type pieceType)

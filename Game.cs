@@ -12,7 +12,7 @@ namespace AgeOfChess
         public AppUIState CorrespondingUiState { get; }
         public List<PieceColor> Colors { get; set; }
         public GameUIState UserInterfaceState { get; set; }
-        public List<Button> Buttons { get; }
+        public List<IUiPart> UiParts { get; }
         public TextNotification TextNotification { get; set; }
         public AppUIState? NewUiState { get; set; }
         public int HeightPixels { get; protected set; }
@@ -37,7 +37,7 @@ namespace AgeOfChess
             _textureLibrary = textureLibrary;
             _fontLibrary = fontLibrary;
 
-            Buttons = new List<Button>();
+            UiParts = new List<IUiPart>();
         }
 
         public int MapSize => Map.Width;
@@ -48,44 +48,7 @@ namespace AgeOfChess
 
         public Square GetSquareByLocation(Point location) => Map.Squares.SingleOrDefault(e => e.LocationIncludesPoint(location));
 
-        public Button SelectedButton => Buttons.SingleOrDefault(e => e.IsSelected);
-
-        public void HandleLeftMouseClick(Point location)
-        {
-            if (UserInterfaceState == GameUIState.PieceSelected)
-            {
-                if (AttemptMovePiece(location))
-                {
-                    EndTurn();
-                }
-                else
-                {
-                    ClearSelection();
-                }
-            }
-            else if (UserInterfaceState == GameUIState.PlacingPiece)
-            {
-                var placePieceButton = (PlacePieceButton)SelectedButton;
-
-                if (AttemptPlacePiece(location, placePieceButton.PieceType))
-                {
-                    ActiveColor.Gold -= placePieceButton.PieceCost;
-                    EndTurn();
-                }
-                else
-                {
-                    ClearSelection();
-                }
-            }
-            else if (location.X > MapSize * 49)
-            {
-                ClickButtonByLocation(location);
-            }
-            else
-            {
-                SelectSquareByLocation(location);
-            }
-        }
+        public Button SelectedButton => (Button)UiParts.SingleOrDefault(e => e is Button button && button.IsSelected);
 
         public void EndTurn()
         {
@@ -160,15 +123,15 @@ namespace AgeOfChess
             spriteBatch.DrawString(_fontLibrary.DefaultFont, $"White gold: {Colors.Single(e => e.IsWhite).Gold}", new Vector2(ControlPanelStartsAtX + 20, 10), Color.Black);
             spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Black gold: {Colors.Single(e => !e.IsWhite).Gold}", new Vector2(ControlPanelStartsAtX + 20, 30), Color.Black);
 
-            foreach (Button button in Buttons)
+            foreach (IUiPart uiPart in UiParts)
             {
-                if (button is PlacePieceButton placePieceButton)
+                if (uiPart is PlacePieceButton placePieceButton)
                 {
                     placePieceButton.Draw(spriteBatch, ActiveColor.IsWhite);
                 }
                 else
                 {
-                    button.Draw(spriteBatch);
+                    uiPart.Draw(spriteBatch);
                 }
             }
 
@@ -327,16 +290,60 @@ namespace AgeOfChess
             }
         }
 
-        public void ClickButtonByLocation(Point location)
+        public void ClickUiPartByLocation(Point location)
         {
-            var button = this.GetButtonByLocation(location);
+            if (UserInterfaceState == GameUIState.PieceSelected)
+            {
+                if (AttemptMovePiece(location))
+                {
+                    EndTurn();
+                }
+                else
+                {
+                    ClearSelection();
+                }
+            }
+            else if (UserInterfaceState == GameUIState.PlacingPiece)
+            {
+                var placePieceButton = (PlacePieceButton)SelectedButton;
 
-            if (button == null)
+                if (AttemptPlacePiece(location, placePieceButton.PieceType))
+                {
+                    ActiveColor.Gold -= placePieceButton.PieceCost;
+                    EndTurn();
+                }
+                else
+                {
+                    ClearSelection();
+                }
+            }
+            else if (location.X > MapSize * 49)
+            {
+                ClickControlPanelUiPartByLocation(location);
+            }
+            else
+            {
+                SelectSquareByLocation(location);
+            }
+        }
+
+        public void ClickControlPanelUiPartByLocation(Point location)
+        {
+            var uiPart = this.GetUiPartByLocation(location);
+
+            if (uiPart == null)
             {
                 return;
             }
 
             ClearSelection();
+
+            Button button = uiPart is Button b ? b : null;
+
+            if (button == null)
+            {
+                return;
+            }
 
             if (button is PlacePieceButton placePieceButton)
             {
@@ -345,8 +352,8 @@ namespace AgeOfChess
                     UserInterfaceState = GameUIState.PlacingPiece;
                     placePieceButton.IsSelected = true;
 
-                    TextNotification = new TextNotification 
-                    { 
+                    TextNotification = new TextNotification
+                    {
                         Message = $"Placing {placePieceButton.PieceType.Name}",
                         Color = Color.Green
                     };
@@ -401,13 +408,17 @@ namespace AgeOfChess
 
         protected void AddDefaultButtons()
         {
-            Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 60, 150, 35), typeof(Queen)));
-            Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 100, 150, 35), typeof(Rook)));
-            Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 140, 150, 35), typeof(Bishop)));
-            Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 180, 150, 35), typeof(Knight)));
-            Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 220, 150, 35), typeof(Pawn)));
+            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 60, 150, 35), typeof(Queen)));
+            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 100, 150, 35), typeof(Rook)));
+            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 140, 150, 35), typeof(Bishop)));
+            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 180, 150, 35), typeof(Knight)));
+            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 220, 150, 35), typeof(Pawn)));
 
-            Buttons.Add(new Button(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 180, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
+            UiParts.Add(new Button(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 180, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
+        }
+
+        public void ReceiveKeyboardInput(TextInputEventArgs args)
+        {
         }
     }
 }

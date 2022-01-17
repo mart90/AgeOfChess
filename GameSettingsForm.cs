@@ -9,46 +9,53 @@ namespace AgeOfChess
     abstract class GameSettingsForm : IUiWindow
     {
         public AppUIState CorrespondingUiState { get; protected set; }
-        public List<Button> Buttons { get; }
+        public List<IUiPart> UiParts { get; }
         public AppUIState? NewUiState { get; set; }
         public GameSettings GameSettings { get; set; }
-        public TextNotification TextNotification { get; set; }
-        public int HeightPixels { get; }
-        public int WidthPixels { get; }
+        public TextNotification TextNotification { get; protected set; }
+        public int HeightPixels { get; protected set; }
+        public int WidthPixels { get; protected set; }
 
         private readonly TextureLibrary _textureLibrary;
         private readonly FontLibrary _fontLibrary;
 
         public GameSettingsForm(TextureLibrary textureLibrary, FontLibrary fontLibrary)
         {
+            _textureLibrary = textureLibrary;
             _fontLibrary = fontLibrary;
+
             HeightPixels = 600;
             WidthPixels = 600;
 
-            Buttons = new List<Button>()
+            UiParts = new List<IUiPart>()
             {
-                new Button(textureLibrary, fontLibrary, new Rectangle(90, 90, 25, 22), ButtonType.MapSizeIncrease, "+1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(120, 90, 25, 22), ButtonType.MapSizeDecrease, "-1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(120, 90, 25, 22), ButtonType.MapSizeIncrease, "+1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(90, 90, 25, 22), ButtonType.MapSizeDecrease, "-1"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(20, 130, 280, 35), ButtonType.PasteMapSeed, "Load map seed from clipboard"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(180, 190, 60, 35), ButtonType.TimeControlToggle, "Toggle"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(200, 235, 25, 22), ButtonType.StartTimeMinutesPlus1, "+1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(230, 235, 40, 22), ButtonType.StartTimeMinutesPlus10, "+10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(275, 235, 25, 22), ButtonType.StartTimeMinutesMinus1, "-1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(305, 235, 40, 22), ButtonType.StartTimeMinutesMinus10, "-10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(200, 265, 25, 22), ButtonType.TimeIncrementSecondsPlus1, "+1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(230, 265, 40, 22), ButtonType.TimeIncrementSecondsPlus10, "+10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(275, 265, 25, 22), ButtonType.TimeIncrementSecondsMinus1, "-1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(305, 265, 40, 22), ButtonType.TimeIncrementSecondsMinus10, "-10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WidthPixels - 290, HeightPixels - 70, 120, 35), ButtonType.Back, "Back"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WidthPixels - 160, HeightPixels - 70, 120, 35), ButtonType.StartGame, "Start game")
+                new Button(textureLibrary, fontLibrary, new Rectangle(275, 235, 25, 22), ButtonType.StartTimeMinutesPlus1, "+1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(305, 235, 40, 22), ButtonType.StartTimeMinutesPlus10, "+10"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(245, 235, 25, 22), ButtonType.StartTimeMinutesMinus1, "-1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(200, 235, 40, 22), ButtonType.StartTimeMinutesMinus10, "-10"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(275, 265, 25, 22), ButtonType.TimeIncrementSecondsPlus1, "+1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(305, 265, 40, 22), ButtonType.TimeIncrementSecondsPlus10, "+10"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(245, 265, 25, 22), ButtonType.TimeIncrementSecondsMinus1, "-1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(200, 265, 40, 22), ButtonType.TimeIncrementSecondsMinus10, "-10")
             };
         }
 
-        public void ClickButtonByLocation(Point location)
+        public virtual void ClickUiPartByLocation(Point location)
         {
             TextNotification = null;
 
-            var button = this.GetButtonByLocation(location);
+            var uiPart = this.GetUiPartByLocation(location);
+
+            if (uiPart == null)
+            {
+                return;
+            }
+
+            Button button = uiPart is Button b ? b : null;
 
             if (button == null)
             {
@@ -71,8 +78,8 @@ namespace AgeOfChess
             {
                 GameSettings.TimeControlEnabled = !GameSettings.TimeControlEnabled;
 
-                var buttons = Buttons
-                    .Where(e => new List<ButtonType>
+                var buttons = UiParts
+                    .Where(e => e is Button button && new List<ButtonType>
                     {
                         ButtonType.StartTimeMinutesPlus1,
                         ButtonType.StartTimeMinutesPlus10,
@@ -83,7 +90,7 @@ namespace AgeOfChess
                         ButtonType.TimeIncrementSecondsMinus1,
                         ButtonType.TimeIncrementSecondsMinus10
                     }
-                    .Contains(e.Type));
+                    .Contains(button.Type));
 
                 if (!GameSettings.TimeControlEnabled)
                 {
@@ -143,14 +150,6 @@ namespace AgeOfChess
                 {
                     GameSettings.TimeIncrementSeconds -= 10;
                 }
-            }
-            else if (button.Type == ButtonType.StartGame)
-            {
-                NewUiState = AppUIState.InGame;
-            }
-            else if (button.Type == ButtonType.Back)
-            {
-                NewUiState = AppUIState.InMenu;
             }
         }
 
@@ -231,24 +230,24 @@ namespace AgeOfChess
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"----- Game settings -----", new Vector2(20, 20), Color.White);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, "-------------------- Game settings --------------------", new Vector2(20, 20), Color.Black);
 
             string mapSetting = GameSettings.MapSeed != null ? "Seeded" : "Generated";
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Map: {mapSetting}", new Vector2(20, 60), Color.White);
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Size: {GameSettings.MapSize}", new Vector2(20, 95), Color.White);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Map: {mapSetting}", new Vector2(20, 60), Color.Black);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Size: {GameSettings.MapSize}", new Vector2(20, 95), Color.Black);
 
             string timeControlSetting = GameSettings.TimeControlEnabled ? "Enabled" : "Disabled";
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Time control: {timeControlSetting}", new Vector2(20, 200), Color.White);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Time control: {timeControlSetting}", new Vector2(20, 200), Color.Black);
 
             if (GameSettings.TimeControlEnabled)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Initial time (minutes): {GameSettings.StartTimeMinutes}", new Vector2(20, 240), Color.White);
-                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Increment (seconds): {GameSettings.TimeIncrementSeconds}", new Vector2(20, 270), Color.White);
+                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Initial time (minutes): {GameSettings.StartTimeMinutes}", new Vector2(20, 240), Color.Black);
+                spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Increment (seconds): {GameSettings.TimeIncrementSeconds}", new Vector2(20, 270), Color.Black);
             }
 
-            foreach (Button button in Buttons)
+            foreach (IUiPart uiPart in UiParts)
             {
-                button.Draw(spriteBatch);
+                uiPart.Draw(spriteBatch);
             }
 
             if (TextNotification != null)
@@ -257,9 +256,8 @@ namespace AgeOfChess
             }
         }
 
-        public void HandleLeftMouseClick(Point location)
+        public void ReceiveKeyboardInput(TextInputEventArgs args)
         {
-            ClickButtonByLocation(location);
         }
     }
 }

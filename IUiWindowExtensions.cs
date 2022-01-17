@@ -6,22 +6,22 @@ namespace AgeOfChess
 {
     static class IUiWindowExtensions
     {
-        public static Button GetButtonByLocation<T>(this T uiComponent, Point location) where T : IUiWindow
+        public static IUiPart GetUiPartByLocation<T>(this T uiComponent, Point location) where T : IUiWindow
         {
-            var matchedButtons = uiComponent.Buttons.Where(e => e.LocationIncludesPoint(location));
+            var matchedParts = uiComponent.UiParts.Where(e => e.LocationIncludesPoint(location));
 
-            if (!matchedButtons.Any())
+            if (!matchedParts.Any())
             {
                 return null;
             }
-            if (matchedButtons.Count() == 1)
+            if (matchedParts.Count() == 1)
             {
-                return matchedButtons.First();
+                return matchedParts.First();
             }
 
-            // Matched multiple buttons. Find which center we are nearest
-            return matchedButtons
-                .Where(e => Math.Abs(location.Y - e.Center.Y) == matchedButtons.Min(e => Math.Abs(location.Y - e.Center.Y)))
+            // Matched multiple UI parts. Find which center we are nearest
+            return matchedParts
+                .Where(e => Math.Abs(location.Y - e.Center.Y) == matchedParts.Min(e => Math.Abs(location.Y - e.Center.Y)))
                 .Single();
         }
     }

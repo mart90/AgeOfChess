@@ -20,6 +20,8 @@ namespace AgeOfChess
 
         private bool _leftMouseHeld;
 
+        private MultiplayerApiClient _apiClient;
+
         public UIController()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -36,6 +38,8 @@ namespace AgeOfChess
             IsMouseVisible = true;
             Window.TextInput += HandleTextInput;
 
+            _apiClient = new MultiplayerApiClient();
+
             _appUIState = AppUIState.InMenu;
             _windows = new List<IUiWindow>();
 
@@ -51,6 +55,9 @@ namespace AgeOfChess
 
             _windows.Add(new Menu(_textureLibrary, _fontLibrary));
             _windows.Add(new SinglePlayerGameSettingsForm(_textureLibrary, _fontLibrary));
+            _windows.Add(new LoginScreen(_textureLibrary, _fontLibrary, _apiClient));
+            _windows.Add(new LobbyBrowser(_textureLibrary, _fontLibrary, _apiClient));
+            _windows.Add(new CreateLobbyForm(_textureLibrary, _fontLibrary, _apiClient));
         }
 
         protected override void Update(GameTime gameTime)
@@ -91,7 +98,7 @@ namespace AgeOfChess
         {
             IUiWindow window = GetActiveUiWindow();
 
-            window.HandleLeftMouseClick(location);
+            window.ClickUiPartByLocation(location);
 
             if (window.NewUiState != null)
             {
@@ -101,6 +108,19 @@ namespace AgeOfChess
                 if (_appUIState == AppUIState.InGame && window is SinglePlayerGameSettingsForm form)
                 {
                     _windows.Add(new SinglePlayerGame((SinglePlayerGameSettings)form.GameSettings, _textureLibrary, _fontLibrary));
+                }
+                else if (_appUIState == AppUIState.InLobbyBrowser && window is LoginScreen loginScreen)
+                {
+                    var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
+                    lobbyBrowser.AuthenticatedUser = loginScreen.AuthenticatedUser;
+                }
+                else if (_appUIState == AppUIState.InLoginScreen && window is Menu)
+                {
+                    var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
+                    if (lobbyBrowser.AuthenticatedUser != null)
+                    {
+                        _appUIState = AppUIState.InLobbyBrowser;
+                    }
                 }
 
                 IUiWindow newActiveWindow = GetActiveUiWindow();
@@ -118,7 +138,7 @@ namespace AgeOfChess
 
         private void HandleTextInput(object sender, TextInputEventArgs args)
         {
-
+            GetActiveUiWindow().ReceiveKeyboardInput(args);
         }
     }
 }

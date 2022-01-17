@@ -4,7 +4,7 @@ using System;
 
 namespace AgeOfChess
 {
-    class Button
+    class Button : IUiPart
     {
         public string Text { get; set; }
         public bool IsSelected { get; set; }

@@ -39,8 +39,8 @@ namespace AgeOfChess
 
             AddDefaultButtons();
 
-            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 140, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
-            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 100, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
+            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 140, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
+            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 100, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
         }
     }
 }
