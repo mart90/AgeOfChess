@@ -7,7 +7,7 @@ using TextCopy;
 
 namespace AgeOfChess
 {
-    abstract class Game : IUiComponent
+    abstract class Game : IUiWindow
     {
         public AppUIState CorrespondingUiState { get; }
         public List<PieceColor> Colors { get; set; }
@@ -15,8 +15,8 @@ namespace AgeOfChess
         public List<Button> Buttons { get; }
         public TextNotification TextNotification { get; set; }
         public AppUIState? NewUiState { get; set; }
-        public int WindowHeight { get; protected set; }
-        public int WindowWidth { get; protected set; }
+        public int HeightPixels { get; protected set; }
+        public int WidthPixels { get; protected set; }
         public string Result { get; private set; }
         public DateTime? LastMoveTimeStamp { get; protected set; }
 
@@ -188,7 +188,7 @@ namespace AgeOfChess
 
             if (TextNotification != null)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(ControlPanelStartsAtX, WindowHeight - 25), TextNotification.Color);
+                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(ControlPanelStartsAtX, HeightPixels - 25), TextNotification.Color);
             }
         }
 
@@ -403,7 +403,7 @@ namespace AgeOfChess
             Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 180, 150, 35), typeof(Knight)));
             Buttons.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 220, 150, 35), typeof(Pawn)));
 
-            Buttons.Add(new Button(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, WindowHeight - 180, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
+            Buttons.Add(new Button(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 180, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
         }
     }
 }

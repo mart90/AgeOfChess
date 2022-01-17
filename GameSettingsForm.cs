@@ -6,15 +6,15 @@ using TextCopy;
 
 namespace AgeOfChess
 {
-    abstract class GameSettingsForm : IUiComponent
+    abstract class GameSettingsForm : IUiWindow
     {
         public AppUIState CorrespondingUiState { get; protected set; }
         public List<Button> Buttons { get; }
         public AppUIState? NewUiState { get; set; }
         public GameSettings GameSettings { get; set; }
         public TextNotification TextNotification { get; set; }
-        public int WindowHeight { get; }
-        public int WindowWidth { get; }
+        public int HeightPixels { get; }
+        public int WidthPixels { get; }
 
         private readonly TextureLibrary _textureLibrary;
         private readonly FontLibrary _fontLibrary;
@@ -22,8 +22,8 @@ namespace AgeOfChess
         public GameSettingsForm(TextureLibrary textureLibrary, FontLibrary fontLibrary)
         {
             _fontLibrary = fontLibrary;
-            WindowHeight = 600;
-            WindowWidth = 600;
+            HeightPixels = 600;
+            WidthPixels = 600;
 
             Buttons = new List<Button>()
             {
@@ -39,8 +39,8 @@ namespace AgeOfChess
                 new Button(textureLibrary, fontLibrary, new Rectangle(230, 265, 40, 22), ButtonType.TimeIncrementSecondsPlus10, "+10"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(275, 265, 25, 22), ButtonType.TimeIncrementSecondsMinus1, "-1"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(305, 265, 40, 22), ButtonType.TimeIncrementSecondsMinus10, "-10"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 290, WindowHeight - 70, 120, 35), ButtonType.Back, "Back"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(WindowWidth - 160, WindowHeight - 70, 120, 35), ButtonType.StartGame, "Start game")
+                new Button(textureLibrary, fontLibrary, new Rectangle(WidthPixels - 290, HeightPixels - 70, 120, 35), ButtonType.Back, "Back"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(WidthPixels - 160, HeightPixels - 70, 120, 35), ButtonType.StartGame, "Start game")
             };
         }
 
@@ -253,7 +253,7 @@ namespace AgeOfChess
 
             if (TextNotification != null)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(20, WindowHeight - 60), TextNotification.Color);
+                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(20, HeightPixels - 60), TextNotification.Color);
             }
         }
 

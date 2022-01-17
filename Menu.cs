@@ -4,19 +4,19 @@ using System.Collections.Generic;
 
 namespace AgeOfChess
 {
-    class Menu : IUiComponent
+    class Menu : IUiWindow
     {
         public AppUIState CorrespondingUiState { get; }
         public List<Button> Buttons { get; set; }
         public AppUIState? NewUiState { get; set; }
-        public int WindowHeight { get; }
-        public int WindowWidth { get; }
+        public int HeightPixels { get; }
+        public int WidthPixels { get; }
 
         public Menu(TextureLibrary textureLibrary, FontLibrary fontLibrary)
         {
             CorrespondingUiState = AppUIState.InMenu;
-            WindowHeight = 600;
-            WindowWidth = 600;
+            HeightPixels = 600;
+            WidthPixels = 600;
 
             Buttons = new List<Button>
             {

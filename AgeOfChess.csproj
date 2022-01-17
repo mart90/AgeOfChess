@@ -28,4 +28,7 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
     <PackageReference Include="TextCopy" Version="5.0.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Multiplayer\" />
+  </ItemGroup>
 </Project>

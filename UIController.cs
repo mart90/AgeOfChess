@@ -11,7 +11,7 @@ namespace AgeOfChess
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        private List<IUiComponent> _components;
+        private List<IUiWindow> _windows;
 
         private TextureLibrary _textureLibrary;
         private FontLibrary _fontLibrary;
@@ -37,7 +37,7 @@ namespace AgeOfChess
             Window.TextInput += HandleTextInput;
 
             _appUIState = AppUIState.InMenu;
-            _components = new List<IUiComponent>();
+            _windows = new List<IUiWindow>();
 
             base.Initialize();
         }
@@ -49,8 +49,8 @@ namespace AgeOfChess
             _textureLibrary = new TextureLibrary(Content);
             _fontLibrary = new FontLibrary(Content);
 
-            _components.Add(new Menu(_textureLibrary, _fontLibrary));
-            _components.Add(new SinglePlayerGameSettingsForm(_textureLibrary, _fontLibrary));
+            _windows.Add(new Menu(_textureLibrary, _fontLibrary));
+            _windows.Add(new SinglePlayerGameSettingsForm(_textureLibrary, _fontLibrary));
         }
 
         protected override void Update(GameTime gameTime)
@@ -80,7 +80,7 @@ namespace AgeOfChess
 
             _spriteBatch.Begin();
 
-            GetActiveUiComponent().Draw(_spriteBatch);
+            GetActiveUiWindow().Draw(_spriteBatch);
 
             _spriteBatch.End();
 
@@ -89,31 +89,31 @@ namespace AgeOfChess
 
         private void HandleLeftMouseClick(Point location)
         {
-            IUiComponent component = GetActiveUiComponent();
+            IUiWindow window = GetActiveUiWindow();
 
-            component.HandleLeftMouseClick(location);
+            window.HandleLeftMouseClick(location);
 
-            if (component.NewUiState != null)
+            if (window.NewUiState != null)
             {
-                _appUIState = component.NewUiState.Value;
-                component.NewUiState = null;
+                _appUIState = window.NewUiState.Value;
+                window.NewUiState = null;
 
-                if (_appUIState == AppUIState.InGame && component is SinglePlayerGameSettingsForm form)
+                if (_appUIState == AppUIState.InGame && window is SinglePlayerGameSettingsForm form)
                 {
-                    _components.Add(new SinglePlayerGame((SinglePlayerGameSettings)form.GameSettings, _textureLibrary, _fontLibrary));
+                    _windows.Add(new SinglePlayerGame((SinglePlayerGameSettings)form.GameSettings, _textureLibrary, _fontLibrary));
                 }
 
-                IUiComponent newComponent = GetActiveUiComponent();
+                IUiWindow newActiveWindow = GetActiveUiWindow();
 
-                _graphics.PreferredBackBufferHeight = newComponent.WindowHeight;
-                _graphics.PreferredBackBufferWidth = newComponent.WindowWidth;
+                _graphics.PreferredBackBufferHeight = newActiveWindow.HeightPixels;
+                _graphics.PreferredBackBufferWidth = newActiveWindow.WidthPixels;
                 _graphics.ApplyChanges();
             }
         }
 
-        private IUiComponent GetActiveUiComponent()
+        private IUiWindow GetActiveUiWindow()
         {
-            return _components.Single(e => e.CorrespondingUiState == _appUIState);
+            return _windows.Single(e => e.CorrespondingUiState == _appUIState);
         }
 
         private void HandleTextInput(object sender, TextInputEventArgs args)

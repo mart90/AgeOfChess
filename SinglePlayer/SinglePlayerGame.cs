@@ -25,8 +25,8 @@ namespace AgeOfChess
                 Map = mapGenerator.GenerateMap(settings.MapSize.Value, settings.MapSize.Value);
             }
 
-            WindowHeight = MapSize * 49 > 600 ? MapSize * 49 : 600;
-            WindowWidth = MapSize * 49 + 200;
+            HeightPixels = MapSize * 49 > 600 ? MapSize * 49 : 600;
+            WidthPixels = MapSize * 49 + 200;
             ControlPanelStartsAtX = MapSize * 49 + 10;
 
             if (settings.TimeControlEnabled)
@@ -39,8 +39,8 @@ namespace AgeOfChess
 
             AddDefaultButtons();
 
-            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, WindowHeight - 140, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
-            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, WindowHeight - 100, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
+            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 140, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
+            Buttons.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 100, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
         }
     }
 }

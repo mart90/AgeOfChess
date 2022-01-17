@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace AgeOfChess
 {
-    static class IUiComponentExtensions
+    static class IUiWindowExtensions
     {
-        public static Button GetButtonByLocation<T>(this T uiComponent, Point location) where T : IUiComponent
+        public static Button GetButtonByLocation<T>(this T uiComponent, Point location) where T : IUiWindow
         {
             var matchedButtons = uiComponent.Buttons.Where(e => e.LocationIncludesPoint(location));
 
