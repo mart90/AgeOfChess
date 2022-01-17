@@ -132,6 +132,8 @@ namespace AgeOfChess
                 {
                     // Checkmate
                     activeKingSquare.SetObject(new WhiteFlag(_textureLibrary));
+                    var winnerStr = ActiveColor.IsWhite ? "B" : "W";
+                    Result = $"{winnerStr}+C";
                 }
                 else
                 {
@@ -145,6 +147,8 @@ namespace AgeOfChess
                 {
                     // Stalemate
                     activeKingSquare.SetObject(new WhiteFlag(_textureLibrary));
+                    var winnerStr = ActiveColor.IsWhite ? "B" : "W";
+                    Result = $"{winnerStr}+S";
                 }
             }
         }
