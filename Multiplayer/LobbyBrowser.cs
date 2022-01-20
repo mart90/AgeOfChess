@@ -165,7 +165,7 @@ namespace AgeOfChess
 
         public void Update(SpriteBatch spriteBatch)
         {
-            if ((DateTime.Now - LastRefresh).TotalSeconds > 10)
+            if ((DateTime.Now - LastRefresh).TotalSeconds > 5)
             {
                 Refresh();
             }
