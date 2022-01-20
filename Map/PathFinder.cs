@@ -171,15 +171,6 @@ namespace AgeOfChess
                     break;
                 }
 
-                if (currentSquare.Type == SquareType.DirtMine
-                    || currentSquare.Type == SquareType.GrassMine
-                    || currentSquare.Type == SquareType.DirtTrees
-                    || currentSquare.Type == SquareType.GrassTrees)
-                {
-                    legalSquares.Add(currentSquare);
-                    break;
-                }
-
                 if (currentSquare.Object != null)
                 {
                     if (currentSquare.Object is Piece occupyingPiece)
@@ -196,6 +187,15 @@ namespace AgeOfChess
                         }
                     }
 
+                    legalSquares.Add(currentSquare);
+                    break;
+                }
+
+                if (currentSquare.Type == SquareType.DirtMine
+                    || currentSquare.Type == SquareType.GrassMine
+                    || currentSquare.Type == SquareType.DirtTrees
+                    || currentSquare.Type == SquareType.GrassTrees)
+                {
                     legalSquares.Add(currentSquare);
                     break;
                 }

@@ -34,7 +34,7 @@ namespace AgeOfChess
 
             int consecutiveEmptySquares = 0;
 
-            foreach (Square square in Squares.Where(e => e.Id < Width * Height / 2 - 1).OrderBy(e => e.Id))
+            foreach (Square square in Squares.Where(e => e.Id < Width * Height / 2).OrderBy(e => e.Id))
             {
                 if (square.Object == null && (square.Type == SquareType.Dirt || square.Type == SquareType.Grass))
                 {

@@ -4,6 +4,7 @@ using System;
 
 namespace AgeOfChess
 {
+    // TODO Piece costs to database? Then no single player without server connection
     class PlacePieceButton : Button
     {
         public Type PieceType { get; }
@@ -19,31 +20,31 @@ namespace AgeOfChess
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteQueen));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackQueen));
-                PieceCost = 60;
+                PieceCost = 70;
             }
             else if (pieceType == typeof(Rook))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteRook));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackRook));
-                PieceCost = 30;
+                PieceCost = 35;
             }
             else if (pieceType == typeof(Bishop))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteBishop));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackBishop));
-                PieceCost = 20;
+                PieceCost = 25;
             }
             else if (pieceType == typeof(Knight))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhiteKnight));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackKnight));
-                PieceCost = 25;
+                PieceCost = 30;
             }
             else if (pieceType == typeof(Pawn))
             {
                 WhitePieceTexture = textureLibrary.GetObjectTextureByType(typeof(WhitePawn));
                 BlackPieceTexture = textureLibrary.GetObjectTextureByType(typeof(BlackPawn));
-                PieceCost = 15;
+                PieceCost = 20;
             }
         }
 

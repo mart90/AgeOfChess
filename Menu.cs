@@ -25,7 +25,7 @@ namespace AgeOfChess
             };
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(SpriteBatch spriteBatch)
         {
             foreach (IUiPart button in UiParts)
             {

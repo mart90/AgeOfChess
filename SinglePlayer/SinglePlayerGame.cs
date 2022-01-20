@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AgeOfChess
 {
@@ -22,11 +23,11 @@ namespace AgeOfChess
             }
             else
             {
-                Map = mapGenerator.GenerateMap(settings.MapSize.Value, settings.MapSize.Value);
+                Map = mapGenerator.GenerateMap(settings.BoardSize.Value, settings.BoardSize.Value);
             }
 
-            HeightPixels = MapSize * 49 > 600 ? MapSize * 49 : 600;
-            WidthPixels = MapSize * 49 + 200;
+            HeightPixels = MapSize * 49 > 700 ? MapSize * 49 : 700;
+            WidthPixels = MapSize * 49 + 220;
             ControlPanelStartsAtX = MapSize * 49 + 10;
 
             if (settings.TimeControlEnabled)
@@ -39,8 +40,30 @@ namespace AgeOfChess
 
             AddDefaultButtons();
 
-            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 140, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
-            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 100, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
+            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 480, 150, 35), ButtonType.BlackGoldIncrease, "Increase B gold"));
+            UiParts.Add(new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 520, 150, 35), ButtonType.BlackGoldDecrease, "Decrease B gold"));
+        }
+
+        public override void EndTurn()
+        {
+            base.EndTurn();
+
+            if (TimeControlEnabled)
+            {
+                PieceColor previousActiveColor = Colors.Single(e => !e.IsActive);
+
+                if (!previousActiveColor.IsWhite || FirstMoveMade) 
+                {
+                    previousActiveColor.TimeMiliseconds -= (int)Math.Floor((DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds);
+                    
+                    if (TimeIncrementSeconds != null)
+                    {
+                        previousActiveColor.TimeMiliseconds += TimeIncrementSeconds.Value * 1000;
+                    }
+                }
+
+                LastMoveTimeStamp = DateTime.Now;
+            }
         }
     }
 }

@@ -29,8 +29,8 @@ namespace AgeOfChess
 
             UiParts = new List<IUiPart>()
             {
-                new Button(textureLibrary, fontLibrary, new Rectangle(120, 90, 25, 22), ButtonType.MapSizeIncrease, "+1"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(90, 90, 25, 22), ButtonType.MapSizeDecrease, "-1"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(120, 90, 25, 22), ButtonType.MapSizeIncrease, "+2"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(90, 90, 25, 22), ButtonType.MapSizeDecrease, "-2"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(20, 130, 280, 35), ButtonType.PasteMapSeed, "Load map seed from clipboard"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(180, 190, 60, 35), ButtonType.TimeControlToggle, "Toggle"),
                 new Button(textureLibrary, fontLibrary, new Rectangle(275, 235, 25, 22), ButtonType.StartTimeMinutesPlus1, "+1"),
@@ -176,7 +176,7 @@ namespace AgeOfChess
             else
             {
                 GameSettings.MapSeed = seed;
-                GameSettings.MapSize = int.Parse(seed.Split('x')[0]);
+                GameSettings.BoardSize = int.Parse(seed.Split('x')[0]);
 
                 TextNotification = new TextNotification
                 {
@@ -188,7 +188,7 @@ namespace AgeOfChess
 
         public void IncreaseMapSize()
         {
-            if (GameSettings.MapSize == 20)
+            if (GameSettings.BoardSize > 18)
             {
                 TextNotification = new TextNotification
                 {
@@ -203,13 +203,13 @@ namespace AgeOfChess
                     GameSettings.MapSeed = null;
                 }
 
-                GameSettings.MapSize++;
+                GameSettings.BoardSize += 2;
             }
         }
 
         public void DecreaseMapSize()
         {
-            if (GameSettings.MapSize == 8)
+            if (GameSettings.BoardSize < 10)
             {
                 TextNotification = new TextNotification
                 {
@@ -224,17 +224,17 @@ namespace AgeOfChess
                     GameSettings.MapSeed = null;
                 }
 
-                GameSettings.MapSize--;
+                GameSettings.BoardSize -= 2;
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(SpriteBatch spriteBatch)
         {
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, "-------------------- Game settings --------------------", new Vector2(20, 20), Color.Black);
+            spriteBatch.DrawString(_fontLibrary.DefaultFontBold, "-------------------- Game settings --------------------", new Vector2(20, 20), Color.Black);
 
             string mapSetting = GameSettings.MapSeed != null ? "Seeded" : "Generated";
             spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Map: {mapSetting}", new Vector2(20, 60), Color.Black);
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Size: {GameSettings.MapSize}", new Vector2(20, 95), Color.Black);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Size: {GameSettings.BoardSize}", new Vector2(20, 95), Color.Black);
 
             string timeControlSetting = GameSettings.TimeControlEnabled ? "Enabled" : "Disabled";
             spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Time control: {timeControlSetting}", new Vector2(20, 200), Color.Black);

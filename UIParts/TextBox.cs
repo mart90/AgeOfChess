@@ -6,8 +6,9 @@ namespace AgeOfChess
     class TextBox : IUiPart
     {
         public string Text { get; set; }
-        public bool HasFocus { get; set; }
+        public bool HasFocus { get; set; } // TODO change to IsSelected & add that to IUiPart
         public TextBoxType Type { get; set; }
+        public bool IsEnabled { get; set; }
 
         private readonly string _description;
 
@@ -18,7 +19,7 @@ namespace AgeOfChess
 
         protected readonly FontLibrary FontLibrary;
 
-        public TextBox(TextureLibrary textureLibrary, FontLibrary fontLibrary, Rectangle location, TextBoxType type, string description, string initialText = null)
+        public TextBox(TextureLibrary textureLibrary, FontLibrary fontLibrary, Rectangle location, TextBoxType type, string description, string initialText = null, bool isEnabled = true)
         {
             _texture = textureLibrary.TextBoxTexture;
             FontLibrary = fontLibrary;
@@ -40,6 +41,7 @@ namespace AgeOfChess
 
             _description = description;
             Text = initialText ?? "";
+            IsEnabled = isEnabled;
         }
 
         public Point Center => _location.Center;

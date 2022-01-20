@@ -65,6 +65,24 @@ namespace AgeOfChess
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
+
+            if (lobbyBrowser.CreatedLobby != null)
+            {
+                if (lobbyBrowser.PlayerJoinedMyLobby())
+                {
+                    lobbyBrowser.HandlePlayerJoined();
+                    _windows.Add(lobbyBrowser.CreatedGame);
+                    _appUIState = AppUIState.InGame;
+
+                    IUiWindow newActiveWindow = GetActiveUiWindow();
+
+                    _graphics.PreferredBackBufferHeight = newActiveWindow.HeightPixels;
+                    _graphics.PreferredBackBufferWidth = newActiveWindow.WidthPixels;
+                    _graphics.ApplyChanges();
+                }
+            }
+
             MouseState mouseState = Mouse.GetState();
 
             if (mouseState.LeftButton == ButtonState.Released && _leftMouseHeld)
@@ -87,7 +105,7 @@ namespace AgeOfChess
 
             _spriteBatch.Begin();
 
-            GetActiveUiWindow().Draw(_spriteBatch);
+            GetActiveUiWindow().Update(_spriteBatch);
 
             _spriteBatch.End();
 
@@ -105,22 +123,36 @@ namespace AgeOfChess
                 _appUIState = window.NewUiState.Value;
                 window.NewUiState = null;
 
-                if (_appUIState == AppUIState.InGame && window is SinglePlayerGameSettingsForm form)
+                if (_appUIState == AppUIState.InGame && window is SinglePlayerGameSettingsForm gameSettingsForm)
                 {
-                    _windows.Add(new SinglePlayerGame((SinglePlayerGameSettings)form.GameSettings, _textureLibrary, _fontLibrary));
+                    _windows.Add(new SinglePlayerGame((SinglePlayerGameSettings)gameSettingsForm.GameSettings, _textureLibrary, _fontLibrary));
                 }
-                else if (_appUIState == AppUIState.InLobbyBrowser && window is LoginScreen loginScreen)
+                else if (_appUIState == AppUIState.InLoginScreen)
                 {
-                    var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
-                    lobbyBrowser.AuthenticatedUser = loginScreen.AuthenticatedUser;
-                }
-                else if (_appUIState == AppUIState.InLoginScreen && window is Menu)
-                {
-                    var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
-                    if (lobbyBrowser.AuthenticatedUser != null)
+                    if (_apiClient.AuthenticatedUser != null)
                     {
                         _appUIState = AppUIState.InLobbyBrowser;
                     }
+                }
+                else if (_appUIState == AppUIState.InLobbyBrowser && window is CreateLobbyForm createLobbyForm)
+                {
+                    var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
+                    lobbyBrowser.CreatedLobby = createLobbyForm.CreatedLobby;
+                    createLobbyForm.CreatedLobby = null;
+                }
+                else if (_appUIState == AppUIState.InGame && window is LobbyBrowser lobbyBrowser)
+                {
+                    _windows.Add(lobbyBrowser.CreatedGame);
+                }
+                else if (_appUIState == AppUIState.InMenu && window is Game)
+                {
+                    if (window is MultiplayerGame)
+                    {
+                        // Get new ELO
+                        _apiClient.RefreshUser();
+                    }
+
+                    _windows.RemoveAll(e => e is Game);
                 }
 
                 IUiWindow newActiveWindow = GetActiveUiWindow();

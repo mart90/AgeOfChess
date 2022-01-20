@@ -7,7 +7,7 @@ namespace AgeOfChess
 {
     class CreateLobbyForm : GameSettingsForm, IUiWindow
     {
-        public User AuthenticatedUser { get; private set; }
+        public Lobby CreatedLobby { get; set; }
 
         private readonly FontLibrary _fontLibrary;
         private readonly MultiplayerApiClient _apiClient;
@@ -54,9 +54,9 @@ namespace AgeOfChess
             }
             else if (uiPart is Button button)
             {
-                if (button.Type == ButtonType.CreateLobby)
+                if (button.Type == ButtonType.StartLobby)
                 {
-                    NewUiState = AppUIState.InLobby;
+                    CreateLobby();
                 }
                 else if (button.Type == ButtonType.Back)
                 {
@@ -69,6 +69,43 @@ namespace AgeOfChess
             }
         }
 
+        public void CreateLobby()
+        {
+            string minRatingStr = this.TextBoxValueByType(TextBoxType.MinRating);
+
+            if (!int.TryParse(minRatingStr, out int minRating))
+            {
+                TextNotification = new TextNotification
+                {
+                    Color = Color.Red,
+                    Message = "Invalid minimum rating"
+                };
+                return;
+            }
+
+            string maxRatingStr = this.TextBoxValueByType(TextBoxType.MaxRating);
+
+            if (!int.TryParse(maxRatingStr, out int maxRating))
+            {
+                TextNotification = new TextNotification
+                {
+                    Color = Color.Red,
+                    Message = "Invalid maximum rating"
+                };
+                return;
+            }
+
+            Settings.MinRating = minRating;
+            Settings.MaxRating = maxRating;
+
+            CreatedLobby = new Lobby
+            {
+                Id = _apiClient.CreateLobby(Settings),
+                Settings = Settings
+            };
+            NewUiState = AppUIState.InLobbyBrowser;
+        }
+
         public void ClearSelection()
         {
             TextNotification = null;
@@ -79,35 +116,16 @@ namespace AgeOfChess
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(SpriteBatch spriteBatch)
         {
-            base.Draw(spriteBatch);
+            base.Update(spriteBatch);
 
             var settings = (MultiplayerGameSettings)GameSettings;
 
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, "----------------- Multiplayer settings -----------------", new Vector2(20, 340), Color.Black);
+            spriteBatch.DrawString(_fontLibrary.DefaultFontBold, "----------------- Multiplayer settings -----------------", new Vector2(20, 340), Color.Black);
 
             string biddingSetting = settings.BiddingEnabled ? "Enabled" : "Disabled";
             spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Bidding: {biddingSetting}", new Vector2(20, 380), Color.Black);
-        }
-
-        public void ReceiveKeyboardInput(TextInputEventArgs args)
-        {
-            var focusedTextBox = (TextBox)UiParts.SingleOrDefault(e => e is TextBox tb && tb.HasFocus);
-
-            if (focusedTextBox == null)
-            {
-                return;
-            }
-
-            if (args.Key == Microsoft.Xna.Framework.Input.Keys.Back && focusedTextBox.Text != "")
-            {
-                focusedTextBox.Text = focusedTextBox.Text[0..^1];
-            }
-            else if (char.IsLetterOrDigit(args.Character))
-            {
-                focusedTextBox.Text += args.Character;
-            }
         }
     }
 }

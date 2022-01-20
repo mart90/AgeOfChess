@@ -2,7 +2,7 @@
 {
     abstract class GameSettings
     {
-        public int? MapSize { get; set; }
+        public int? BoardSize { get; set; }
         public bool TimeControlEnabled { get; set; }
         public int? StartTimeMinutes { get; set; }
         public int? TimeIncrementSeconds { get; set; }
@@ -10,7 +10,7 @@
 
         public GameSettings()
         {
-            MapSize = 12;
+            BoardSize = 12;
             TimeControlEnabled = true;
             StartTimeMinutes = 5;
             TimeIncrementSeconds = 5;

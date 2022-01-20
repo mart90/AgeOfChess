@@ -8,5 +8,6 @@ namespace AgeOfChess
         void Draw(SpriteBatch spriteBatch);
         Point Center { get; }
         bool LocationIncludesPoint(Point point);
+        bool IsEnabled { get; set; }
     }
 }

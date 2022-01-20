@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AgeOfChess
+﻿namespace AgeOfChess
 {
     class PieceColor
     {
@@ -8,12 +6,14 @@ namespace AgeOfChess
         public bool IsActive { get; set; }
         public int Gold { get; set; }
         public int TimeMiliseconds { get; set; }
-        public string PlayedBy { get; }
+        public string PlayedByStr { get; set; }
 
-        public PieceColor(bool isWhite, string playedBy)
+        public bool IsUs { get; set; }
+
+        public PieceColor(bool isWhite, string playedByStr)
         {
             IsWhite = isWhite;
-            PlayedBy = playedBy;
+            PlayedByStr = playedByStr;
             IsActive = isWhite;
 
             Gold = IsWhite ? 0 : 10;

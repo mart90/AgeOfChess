@@ -45,11 +45,13 @@
         InGame
     }
 
-    enum GameUIState
+    enum GameState
     {
         Default,
         PieceSelected,
-        PlacingPiece
+        PlacingPiece,
+        Bidding,
+        WaitingForOpponentBid
     }
 
     enum ButtonType
@@ -70,6 +72,7 @@
         CreateLobby,
         JoinLobby,
         StartLobby,
+        CancelLobby,
 
         PasteMapSeed,
         MapSizeIncrease,
@@ -83,7 +86,10 @@
         TimeIncrementSecondsPlus10,
         TimeIncrementSecondsMinus1,
         TimeIncrementSecondsMinus10,
-        BiddingToggle
+
+        BiddingToggle,
+        SubmitBid,
+        Resign
     }
 
     enum TextBoxType
@@ -91,6 +97,7 @@
         Username,
         Password,
         MinRating,
-        MaxRating
+        MaxRating,
+        Bid
     }
 }

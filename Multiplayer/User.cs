@@ -4,7 +4,8 @@
     {
         public int Id { get; set; }
         public string Username { get; set; }
-        public string HashedPassword { get; set; }
-        public string LastElo { get; set; }
+        public string Password { get; set; }
+        public double LastElo { get; set; }
+        public int? Bid { get; set; }
     }
 }

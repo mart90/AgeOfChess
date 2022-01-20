@@ -10,9 +10,8 @@ namespace AgeOfChess
         int WidthPixels { get; }
         AppUIState CorrespondingUiState { get; }
         List<IUiPart> UiParts { get; }
-        void Draw(SpriteBatch spriteBatch);
+        void Update(SpriteBatch spriteBatch);
         void ClickUiPartByLocation(Point location);
         AppUIState? NewUiState { get; set; }
-        void ReceiveKeyboardInput(TextInputEventArgs args);
     }
 }

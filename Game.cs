@@ -11,38 +11,45 @@ namespace AgeOfChess
     {
         public AppUIState CorrespondingUiState { get; }
         public List<PieceColor> Colors { get; set; }
-        public GameUIState UserInterfaceState { get; set; }
+        public GameState State { get; set; }
         public List<IUiPart> UiParts { get; }
         public TextNotification TextNotification { get; set; }
         public AppUIState? NewUiState { get; set; }
         public int HeightPixels { get; protected set; }
         public int WidthPixels { get; protected set; }
-        public string Result { get; private set; }
+        public string Result { get; protected set; }
         public DateTime? LastMoveTimeStamp { get; protected set; }
+        public List<Move> MoveList { get; }
 
         protected Map Map;
-        private readonly TextureLibrary _textureLibrary;
-        private readonly FontLibrary _fontLibrary;
+        protected readonly TextureLibrary TextureLibrary;
+        protected readonly FontLibrary FontLibrary;
 
         protected bool TimeControlEnabled;
         protected int? TimeIncrementSeconds;
         protected int ControlPanelStartsAtX;
+        protected bool FirstMoveMade;
+        protected bool GameEnded;
 
         public Game(TextureLibrary textureLibrary, FontLibrary fontLibrary)
         {
             CorrespondingUiState = AppUIState.InGame;
 
-            UserInterfaceState = GameUIState.Default;
+            State = GameState.Default;
 
-            _textureLibrary = textureLibrary;
-            _fontLibrary = fontLibrary;
+            TextureLibrary = textureLibrary;
+            FontLibrary = fontLibrary;
 
             UiParts = new List<IUiPart>();
+
+            MoveList = new List<Move>();
         }
 
         public int MapSize => Map.Width;
 
         public PieceColor ActiveColor => Colors.Single(e => e.IsActive);
+
+        public PieceColor InActiveColor => Colors.Single(e => !e.IsActive);
 
         public PieceColor GetPieceColor(Piece piece) => Colors.Single(e => e.IsWhite == piece.IsWhite);
 
@@ -50,23 +57,21 @@ namespace AgeOfChess
 
         public Button SelectedButton => (Button)UiParts.SingleOrDefault(e => e is Button button && button.IsSelected);
 
-        public void EndTurn()
+        public PieceColor White => Colors.Single(e => e.IsWhite);
+
+        public PieceColor Black => Colors.Single(e => !e.IsWhite);
+
+        protected virtual void EndGame()
+        {
+            GameEnded = true;
+        }
+
+        public virtual void EndTurn()
         {
             PieceColor previousActiveColor = ActiveColor;
 
             previousActiveColor.IsActive = false;
             Colors.Single(e => e != previousActiveColor).IsActive = true;
-
-            if (TimeControlEnabled) 
-            {
-                previousActiveColor.TimeMiliseconds -= (int)Math.Floor((DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds);
-                LastMoveTimeStamp = DateTime.Now;
-
-                if (TimeIncrementSeconds != null)
-                {
-                    previousActiveColor.TimeMiliseconds += TimeIncrementSeconds.Value * 1000;
-                }
-            }
 
             foreach (Square square in Map.GetMines())
             {
@@ -75,14 +80,80 @@ namespace AgeOfChess
                     GetPieceColor(piece).Gold += 3;
                 }
             }
-
-            StartNewTurn();
         }
 
         public void StartNewTurn()
         {
             ClearSelection();
 
+            if (!FirstMoveMade)
+            {
+                FirstMoveMade = true;
+            }
+
+            PieceColor winningColor = null;
+
+            if (CheckForMate())
+            {
+                winningColor = InActiveColor;
+
+                TextNotification = new TextNotification
+                {
+                    Color = Color.Green,
+                    Message = winningColor.IsWhite ? "White wins by mate" : "Black wins by mate"
+                };
+            }
+
+            if (winningColor == null)
+            {
+                winningColor = CheckForGoldVictory();
+
+                if (winningColor != null)
+                {
+                    TextNotification = new TextNotification
+                    {
+                        Color = Color.Green,
+                        Message = winningColor.IsWhite ? "White wins by gold count" : "Black wins by gold count"
+                    };
+                }
+            }
+
+            if (winningColor != null)
+            {
+                EndGame();
+            }
+        }
+
+        private PieceColor CheckForGoldVictory()
+        {
+            IEnumerable<PieceColor> colorsWithWinningGold = Colors.Where(e => e.Gold > 150);
+
+            if (colorsWithWinningGold.Any())
+            {
+                PieceColor winningColor = null;
+
+                if (colorsWithWinningGold.Count() == 1)
+                {
+                    winningColor = colorsWithWinningGold.First();
+                }
+                else if (colorsWithWinningGold.Select(e => e.Gold).Distinct().Count() == 2) // Else players are on equal gold
+                {
+                    winningColor = colorsWithWinningGold.Single(e => e.Gold == colorsWithWinningGold.Max(e => e.Gold));
+                }
+
+                if (winningColor != null)
+                {
+                    Result = winningColor.IsWhite ? "w+g" : "b+g";
+                }
+
+                return winningColor;
+            }
+
+            return null;
+        }
+
+        private bool CheckForMate()
+        {
             var pathFinder = new PathFinder(Map);
 
             Square activeKingSquare = Map.Squares.Single(e => e.Object is King king && king.IsWhite == ActiveColor.IsWhite);
@@ -94,34 +165,38 @@ namespace AgeOfChess
                 if (!activeKingLegalMoves.Any())
                 {
                     // Checkmate
-                    activeKingSquare.SetObject(new WhiteFlag(_textureLibrary));
-                    var winnerStr = ActiveColor.IsWhite ? "B" : "W";
-                    Result = $"{winnerStr}+C";
+                    activeKingSquare.SetObject(new WhiteFlag(TextureLibrary));
+                    Result = ActiveColor.IsWhite ? "b+c" : "w+c";
+                    return true;
                 }
                 else
                 {
+                    // Just check
                     activeKingSquare.SetTemporaryColor(SquareColor.Red);
+                    return false;
                 }
             }
 
             if (!activeKingLegalMoves.Any() && Map.Squares.Where(e => e.Object is Piece piece && piece.IsWhite == ActiveColor.IsWhite).Count() == 1)
             {
-                if (Colors.Single(e => !e.IsActive).Gold < 25)
+                if (Colors.Single(e => !e.IsActive).Gold < 15)
                 {
                     // Stalemate
-                    activeKingSquare.SetObject(new WhiteFlag(_textureLibrary));
-                    var winnerStr = ActiveColor.IsWhite ? "B" : "W";
-                    Result = $"{winnerStr}+S";
+                    activeKingSquare.SetObject(new WhiteFlag(TextureLibrary));
+                    Result = ActiveColor.IsWhite ? "b+s" : "w+s";
+                    return true;
                 }
             }
+
+            return false;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public virtual void Update(SpriteBatch spriteBatch)
         {
             Map.Draw(spriteBatch);
 
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"White gold: {Colors.Single(e => e.IsWhite).Gold}", new Vector2(ControlPanelStartsAtX + 20, 10), Color.Black);
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Black gold: {Colors.Single(e => !e.IsWhite).Gold}", new Vector2(ControlPanelStartsAtX + 20, 30), Color.Black);
+            spriteBatch.DrawString(FontLibrary.DefaultFont, $"White gold: {White.Gold}", new Vector2(ControlPanelStartsAtX + 20, 10), Color.Black);
+            spriteBatch.DrawString(FontLibrary.DefaultFont, $"Black gold: {Black.Gold}", new Vector2(ControlPanelStartsAtX + 20, 30), Color.Black);
 
             foreach (IUiPart uiPart in UiParts)
             {
@@ -135,33 +210,52 @@ namespace AgeOfChess
                 }
             }
 
-            string whiteStr = $"White ({Colors.Single(e => e.IsWhite).PlayedBy})";
-            string blackStr = $"Black ({Colors.Single(e => !e.IsWhite).PlayedBy})";
-
-            spriteBatch.DrawString(ActiveColor.IsWhite ? _fontLibrary.DefaultFontBold : _fontLibrary.DefaultFont, whiteStr, new Vector2(ControlPanelStartsAtX + 20, 290), Color.Black);
-            spriteBatch.DrawString(!ActiveColor.IsWhite ? _fontLibrary.DefaultFontBold : _fontLibrary.DefaultFont, blackStr, new Vector2(ControlPanelStartsAtX + 20, 350), Color.Black);
-
             if (TimeControlEnabled)
             {
-                TimeSpan whiteTime = TimeSpan.FromMilliseconds(Colors.Single(e => e.IsWhite).TimeMiliseconds - (ActiveColor.IsWhite ? (DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds : 0));
-                TimeSpan blackTime = TimeSpan.FromMilliseconds(Colors.Single(e => !e.IsWhite).TimeMiliseconds - (!ActiveColor.IsWhite ? (DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds : 0));
+                bool whiteClockRunning = (ActiveColor.IsWhite && FirstMoveMade) || State == GameState.Bidding;
+                bool blackClockRunning = !ActiveColor.IsWhite;
+
+                TimeSpan whiteTime = TimeSpan.FromMilliseconds(White.TimeMiliseconds - (whiteClockRunning ? (DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds : 0));
+                TimeSpan blackTime = TimeSpan.FromMilliseconds(Black.TimeMiliseconds - (blackClockRunning ? (DateTime.Now - LastMoveTimeStamp.Value).TotalMilliseconds : 0));
+
+                if (whiteTime.TotalSeconds < 0)
+                {
+                    HandleTimeRanOut(White);
+                    whiteTime = new TimeSpan(0);
+                }
+                else if (blackTime.TotalSeconds < 0)
+                {
+                    HandleTimeRanOut(Black);
+                    blackTime = new TimeSpan(0);
+                }
 
                 string whiteTimeStr = whiteTime.ToString(@"hh\:mm\:ss");
                 string blackTimeStr = blackTime.ToString(@"hh\:mm\:ss");
 
-                spriteBatch.DrawString(ActiveColor.IsWhite ? _fontLibrary.DefaultFontBold : _fontLibrary.DefaultFont, whiteTimeStr, new Vector2(ControlPanelStartsAtX + 20, 310), Color.Black);
-                spriteBatch.DrawString(!ActiveColor.IsWhite ? _fontLibrary.DefaultFontBold : _fontLibrary.DefaultFont, blackTimeStr, new Vector2(ControlPanelStartsAtX + 20, 370), Color.Black);
+                spriteBatch.DrawString(ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, whiteTimeStr, new Vector2(ControlPanelStartsAtX + 20, 310), Color.Black);
+                spriteBatch.DrawString(!ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, blackTimeStr, new Vector2(ControlPanelStartsAtX + 20, 410), Color.Black);
             }
+
+            spriteBatch.DrawString(ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, "White", new Vector2(ControlPanelStartsAtX + 20, 270), Color.Black);
+            spriteBatch.DrawString(!ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, "Black", new Vector2(ControlPanelStartsAtX + 20, 370), Color.Black);
+
+            spriteBatch.DrawString(ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, White.PlayedByStr, new Vector2(ControlPanelStartsAtX + 20, 290), Color.Black);
+            spriteBatch.DrawString(!ActiveColor.IsWhite ? FontLibrary.DefaultFontBold : FontLibrary.DefaultFont, Black.PlayedByStr, new Vector2(ControlPanelStartsAtX + 20, 390), Color.Black);
 
             if (TextNotification != null)
             {
-                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(ControlPanelStartsAtX, HeightPixels - 25), TextNotification.Color);
+                spriteBatch.DrawString(FontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(ControlPanelStartsAtX, HeightPixels - 25), TextNotification.Color);
             }
         }
 
-        public bool AttemptMovePiece(Point location)
+        protected virtual void HandleTimeRanOut(PieceColor color) 
         {
-            // TODO check for illegal moves (king check)
+            // TODO Should we do anything regardless of whether it's multiplayer or single player?
+        }
+
+        private bool AttemptMovePiece(Point location)
+        {
+            // TODO check for illegal moves where a piece is moved and it's a discovered check on our own king
 
             var destinationSquare = GetSquareByLocation(location);
             var sourceSquare = Map.SelectedSquare;
@@ -180,22 +274,32 @@ namespace AgeOfChess
                     return false;
                 }
 
-                sourceSquare.ClearObject();
-
-                if (destinationSquare.Object is Treasure)
-                {
-                    GetPieceColor(piece).Gold += 20;
-                }
-
-                destinationSquare.SetObject(piece);
-
+                MovePiece(sourceSquare, destinationSquare);
                 return true;
             }
 
             return false;
         }
 
-        public bool AttemptPlacePiece(Point location, Type pieceType)
+        protected void MovePiece(Square sourceSquare, Square destinationSquare)
+        {
+            PlaceableObject objectToCapture = destinationSquare.Object;
+
+            MoveList.Add(new Move(sourceSquare, destinationSquare, null, objectToCapture != null ? Move.ObjectToStringId(objectToCapture) : null));
+
+            var piece = (Piece)sourceSquare.Object;
+
+            sourceSquare.ClearObject();
+
+            if (destinationSquare.Object is Treasure)
+            {
+                GetPieceColor(piece).Gold += 20;
+            }
+
+            destinationSquare.SetObject(piece);
+        }
+
+        private bool AttemptPlacePiece(Point location, Type pieceType)
         {
             ClearSelection();
 
@@ -203,35 +307,44 @@ namespace AgeOfChess
 
             if (destinationSquare != null && FindLegalDestinationsForPiecePlacement(pieceType == typeof(Pawn)).Contains(destinationSquare))
             {
-                Piece newPiece = null;
-
-                if (pieceType == typeof(Queen))
-                {
-                    if (ActiveColor.IsWhite) newPiece = new WhiteQueen(_textureLibrary); else newPiece = new BlackQueen(_textureLibrary);
-                }
-                if (pieceType == typeof(Rook))
-                {
-                    if (ActiveColor.IsWhite) newPiece = new WhiteRook(_textureLibrary); else newPiece = new BlackRook(_textureLibrary);
-                }
-                if (pieceType == typeof(Bishop))
-                {
-                    if (ActiveColor.IsWhite) newPiece = new WhiteBishop(_textureLibrary); else newPiece = new BlackBishop(_textureLibrary);
-                }
-                if (pieceType == typeof(Knight))
-                {
-                    if (ActiveColor.IsWhite) newPiece = new WhiteKnight(_textureLibrary); else newPiece = new BlackKnight(_textureLibrary);
-                }
-                if (pieceType == typeof(Pawn))
-                {
-                    if (ActiveColor.IsWhite) newPiece = new WhitePawn(_textureLibrary); else newPiece = new BlackPawn(_textureLibrary);
-                }
-
-                destinationSquare.SetObject(newPiece);
-
+                PlacePiece(destinationSquare, pieceType);
                 return true;
             }
 
             return false;
+        }
+
+        protected void PlacePiece(Square destinationSquare, Type pieceType)
+        {
+            MoveList.Add(new Move(null, destinationSquare, Move.ObjectTypeToStringId(pieceType)));
+
+            Piece newPiece = null;
+
+            if (pieceType == typeof(Queen))
+            {
+                if (ActiveColor.IsWhite) newPiece = new WhiteQueen(TextureLibrary); else newPiece = new BlackQueen(TextureLibrary);
+            }
+            if (pieceType == typeof(Rook))
+            {
+                if (ActiveColor.IsWhite) newPiece = new WhiteRook(TextureLibrary); else newPiece = new BlackRook(TextureLibrary);
+            }
+            if (pieceType == typeof(Bishop))
+            {
+                if (ActiveColor.IsWhite) newPiece = new WhiteBishop(TextureLibrary); else newPiece = new BlackBishop(TextureLibrary);
+            }
+            if (pieceType == typeof(Knight))
+            {
+                if (ActiveColor.IsWhite) newPiece = new WhiteKnight(TextureLibrary); else newPiece = new BlackKnight(TextureLibrary);
+            }
+            if (pieceType == typeof(Pawn))
+            {
+                if (ActiveColor.IsWhite) newPiece = new WhitePawn(TextureLibrary); else newPiece = new BlackPawn(TextureLibrary);
+            }
+
+            destinationSquare.SetObject(newPiece);
+
+            var placePieceButton = (PlacePieceButton)UiParts.Single(e => e is PlacePieceButton ppb && ppb.PieceType == pieceType);
+            ActiveColor.Gold -= placePieceButton.PieceCost;
         }
 
         public IEnumerable<Square> FindLegalDestinationsForPiecePlacement(bool placingPawn = false)
@@ -265,7 +378,7 @@ namespace AgeOfChess
             return legalDestinations;
         }
 
-        public void SelectSquareByLocation(Point location)
+        private void SelectSquareByLocation(Point location)
         {
             var square = GetSquareByLocation(location);
 
@@ -278,7 +391,7 @@ namespace AgeOfChess
 
             if (square.Object is Piece piece && ActiveColor == GetPieceColor(piece))
             {
-                UserInterfaceState = GameUIState.PieceSelected;
+                State = GameState.PieceSelected;
                 square.IsSelected = true;
 
                 IEnumerable<Square> destinationSquares = Map.FindLegalDestinationsForPiece(piece, square);
@@ -290,27 +403,28 @@ namespace AgeOfChess
             }
         }
 
-        public void ClickUiPartByLocation(Point location)
+        public virtual void ClickUiPartByLocation(Point location)
         {
-            if (UserInterfaceState == GameUIState.PieceSelected)
+            if (State == GameState.PieceSelected)
             {
                 if (AttemptMovePiece(location))
                 {
                     EndTurn();
+                    StartNewTurn();
                 }
                 else
                 {
                     ClearSelection();
                 }
             }
-            else if (UserInterfaceState == GameUIState.PlacingPiece)
+            else if (State == GameState.PlacingPiece)
             {
                 var placePieceButton = (PlacePieceButton)SelectedButton;
 
                 if (AttemptPlacePiece(location, placePieceButton.PieceType))
                 {
-                    ActiveColor.Gold -= placePieceButton.PieceCost;
                     EndTurn();
+                    StartNewTurn();
                 }
                 else
                 {
@@ -327,7 +441,7 @@ namespace AgeOfChess
             }
         }
 
-        public void ClickControlPanelUiPartByLocation(Point location)
+        private void ClickControlPanelUiPartByLocation(Point location)
         {
             var uiPart = this.GetUiPartByLocation(location);
 
@@ -349,7 +463,7 @@ namespace AgeOfChess
             {
                 if (ActiveColor.Gold >= placePieceButton.PieceCost)
                 {
-                    UserInterfaceState = GameUIState.PlacingPiece;
+                    State = GameState.PlacingPiece;
                     placePieceButton.IsSelected = true;
 
                     TextNotification = new TextNotification
@@ -383,10 +497,20 @@ namespace AgeOfChess
             else if (button.Type == ButtonType.CopyMapSeed)
             {
                 ClipboardService.SetText(Map.Seed);
+                
+                TextNotification = new TextNotification
+                {
+                    Color = Color.Green,
+                    Message = "Copied"
+                };
+            }
+            else if (button.Type == ButtonType.Back)
+            {
+                NewUiState = AppUIState.InMenu;
             }
         }
 
-        public void ClearSelection()
+        protected void ClearSelection()
         {
             var selectedSquare = Map.SelectedSquare;
             if (selectedSquare != null)
@@ -403,22 +527,24 @@ namespace AgeOfChess
 
             Map.Squares.ForEach(e => e.ClearTemporaryColor());
 
-            UserInterfaceState = GameUIState.Default;
+            foreach (IUiPart uiPart in UiParts.Where(e => e is TextBox))
+            {
+                ((TextBox)uiPart).HasFocus = false;
+            }
+
+            State = GameState.Default;
         }
 
         protected void AddDefaultButtons()
         {
-            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 60, 150, 35), typeof(Queen)));
-            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 100, 150, 35), typeof(Rook)));
-            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 140, 150, 35), typeof(Bishop)));
-            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 180, 150, 35), typeof(Knight)));
-            UiParts.Add(new PlacePieceButton(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 220, 150, 35), typeof(Pawn)));
+            UiParts.Add(new PlacePieceButton(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 60, 150, 35), typeof(Queen)));
+            UiParts.Add(new PlacePieceButton(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 100, 150, 35), typeof(Rook)));
+            UiParts.Add(new PlacePieceButton(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 140, 150, 35), typeof(Bishop)));
+            UiParts.Add(new PlacePieceButton(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 180, 150, 35), typeof(Knight)));
+            UiParts.Add(new PlacePieceButton(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 220, 150, 35), typeof(Pawn)));
 
-            UiParts.Add(new Button(_textureLibrary, _fontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 180, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
-        }
-
-        public void ReceiveKeyboardInput(TextInputEventArgs args)
-        {
+            UiParts.Add(new Button(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, 440, 150, 35), ButtonType.CopyMapSeed, "Copy map seed"));
+            UiParts.Add(new Button(TextureLibrary, FontLibrary, new Rectangle(ControlPanelStartsAtX + 15, HeightPixels - 80, 150, 35), ButtonType.Back, "Return to menu"));
         }
     }
 }

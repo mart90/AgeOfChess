@@ -12,7 +12,6 @@ namespace AgeOfChess
         public AppUIState CorrespondingUiState { get; }
         public List<IUiPart> UiParts { get; }
         public AppUIState? NewUiState { get; set; }
-        public User AuthenticatedUser { get; private set; }
         public TextNotification TextNotification { get; private set; }
 
         private readonly FontLibrary _fontLibrary;
@@ -72,8 +71,18 @@ namespace AgeOfChess
 
         public void TryRegister()
         {
-            string username = ((TextBox)UiParts.Single(e => e is TextBox tb && tb.Type == TextBoxType.Username)).Text;
-            string password = ((TextBox)UiParts.Single(e => e is TextBox tb && tb.Type == TextBoxType.Password)).Text;
+            string username = this.TextBoxValueByType(TextBoxType.Username);
+            string plainTextPassword = this.TextBoxValueByType(TextBoxType.Password);
+
+            if (username.Length > 12)
+            {
+                TextNotification = new TextNotification
+                {
+                    Color = Color.Red,
+                    Message = "Username too long. Max 12 characters"
+                };
+                return;
+            }
 
             var existingUser = _apiClient.GetUserIdByName(username);
 
@@ -87,36 +96,20 @@ namespace AgeOfChess
                 return;
             }
 
-            int newId = _apiClient.RegisterUser(username, password);
-
-            AuthenticatedUser = new User
-            {
-                Id = newId,
-                Username = username,
-                HashedPassword = password
-            };
+            _apiClient.RegisterUser(username, plainTextPassword);
 
             NewUiState = AppUIState.InLobbyBrowser;
         }
 
         public void TryLogin()
         {
-            string username = ((TextBox)UiParts.Single(e => e is TextBox tb && tb.Type == TextBoxType.Username)).Text;
-            string password = ((TextBox)UiParts.Single(e => e is TextBox tb && tb.Type == TextBoxType.Password)).Text;
+            string username = this.TextBoxValueByType(TextBoxType.Username);
+            string plainTextPassword = this.TextBoxValueByType(TextBoxType.Password);
 
-            password = MultiplayerApiClient.HashPassword(password);
+            bool loginSuccess = _apiClient.Login(username, plainTextPassword);
 
-            var loginResponse = _apiClient.Login(username, password);
-
-            if (loginResponse != null)
+            if (loginSuccess)
             {
-                AuthenticatedUser = new User
-                {
-                    Id = loginResponse.Value,
-                    Username = username,
-                    HashedPassword = password
-                };
-
                 NewUiState = AppUIState.InLobbyBrowser;
             }
             else
@@ -139,7 +132,7 @@ namespace AgeOfChess
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Update(SpriteBatch spriteBatch)
         {
             foreach (IUiPart uiPart in UiParts)
             {
@@ -149,25 +142,6 @@ namespace AgeOfChess
             if (TextNotification != null)
             {
                 spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(20, HeightPixels - 60), TextNotification.Color);
-            }
-        }
-
-        public void ReceiveKeyboardInput(TextInputEventArgs args)
-        {
-            var focusedTextBox = (TextBox)UiParts.SingleOrDefault(e => e is TextBox tb && tb.HasFocus);
-
-            if (focusedTextBox == null)
-            {
-                return;
-            }
-
-            if (args.Key == Microsoft.Xna.Framework.Input.Keys.Back && focusedTextBox.Text != "")
-            {
-                focusedTextBox.Text = focusedTextBox.Text[0..^1];
-            }
-            else if (char.IsLetterOrDigit(args.Character))
-            {
-                focusedTextBox.Text += args.Character;
             }
         }
     }
