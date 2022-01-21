@@ -11,17 +11,25 @@ namespace AgeOfChess
         public AppUIState? NewUiState { get; set; }
         public int HeightPixels { get; }
         public int WidthPixels { get; }
+        TextNotification TextNotification { get; set; }
 
-        public Menu(TextureLibrary textureLibrary, FontLibrary fontLibrary)
+        private MultiplayerApiClient _apiClient;
+        private FontLibrary _fontLibrary;
+
+        public Menu(TextureLibrary textureLibrary, FontLibrary fontLibrary, MultiplayerApiClient apiClient)
         {
             CorrespondingUiState = AppUIState.InMenu;
             HeightPixels = 600;
             WidthPixels = 600;
 
+            _apiClient = apiClient;
+            _fontLibrary = fontLibrary;
+
             UiParts = new List<IUiPart>
             {
                 new Button(textureLibrary, fontLibrary, new Rectangle(225, 200, 150, 35), ButtonType.SinglePlayer, "Single player"),
-                new Button(textureLibrary, fontLibrary, new Rectangle(225, 240, 150, 35), ButtonType.Multiplayer, "Multiplayer")
+                new Button(textureLibrary, fontLibrary, new Rectangle(225, 240, 150, 35), ButtonType.Multiplayer, "Multiplayer"),
+                new Button(textureLibrary, fontLibrary, new Rectangle(225, 280, 150, 35), ButtonType.Leaderboard, "Leaderboard")
             };
         }
 
@@ -30,6 +38,11 @@ namespace AgeOfChess
             foreach (IUiPart button in UiParts)
             {
                 button.Draw(spriteBatch);
+            }
+
+            if (TextNotification != null)
+            {
+                spriteBatch.DrawString(_fontLibrary.DefaultFontBold, TextNotification.Message, new Vector2(20, HeightPixels - 60), TextNotification.Color);
             }
         }
 
@@ -55,7 +68,22 @@ namespace AgeOfChess
             }
             else if (button.Type == ButtonType.Multiplayer)
             {
-                NewUiState = AppUIState.InLoginScreen;
+                if (!_apiClient.RunningLatestVersion())
+                {
+                    TextNotification = new TextNotification
+                    {
+                        Color = Color.Red,
+                        Message = "Server is running a newer version. Get the latest from the discord"
+                    };
+                }
+                else
+                {
+                    NewUiState = AppUIState.InLoginScreen;
+                }
+            }
+            else if (button.Type == ButtonType.Leaderboard)
+            {
+                NewUiState = AppUIState.ViewingLeaderboard;
             }
         }
 

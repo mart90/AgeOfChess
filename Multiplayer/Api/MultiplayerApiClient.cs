@@ -9,6 +9,8 @@ namespace AgeOfChess
 {
     class MultiplayerApiClient
     {
+        const string OUR_VERSION = "0.4";
+
         public User AuthenticatedUser { get; set; }
 
         private readonly HttpClient _client;
@@ -17,11 +19,19 @@ namespace AgeOfChess
         public MultiplayerApiClient()
         {
             _baseUrl = "http://82.170.37.68:7275/";
+            //_baseUrl = "http://localhost:5000/";
 
             _client = new HttpClient()
             {
                 BaseAddress = new Uri(_baseUrl)
             };
+        }
+
+        public bool RunningLatestVersion()
+        {
+            string serverVersion = Get("latest_version");
+
+            return OUR_VERSION == serverVersion;
         }
 
         public void RegisterUser(string username, string plainTextPassword)
@@ -260,6 +270,16 @@ namespace AgeOfChess
                 gameId,
                 result
             });
+        }
+
+        public LeaderboardDto GetLeaderboard()
+        {
+            string result = Get("get_leaderboard", new
+            {
+                userId = AuthenticatedUser?.Id
+            });
+
+            return JsonConvert.DeserializeObject<LeaderboardDto>(result);
         }
 
         private string Get(string url, object convertableObject = null)

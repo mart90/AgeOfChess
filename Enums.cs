@@ -42,7 +42,8 @@
         InLobbyBrowser,
         InLobby,
         CreatingLobby,
-        InGame
+        InGame,
+        ViewingLeaderboard
     }
 
     enum GameState
@@ -64,9 +65,10 @@
         BlackGoldDecrease,
 
         SinglePlayer,
-        StartGame,
-
         Multiplayer,
+        Leaderboard,
+        
+        StartGame,
         Login,
         Register,
         CreateLobby,

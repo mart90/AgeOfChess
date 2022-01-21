@@ -53,11 +53,12 @@ namespace AgeOfChess
             _textureLibrary = new TextureLibrary(Content);
             _fontLibrary = new FontLibrary(Content);
 
-            _windows.Add(new Menu(_textureLibrary, _fontLibrary));
+            _windows.Add(new Menu(_textureLibrary, _fontLibrary, _apiClient));
             _windows.Add(new SinglePlayerGameSettingsForm(_textureLibrary, _fontLibrary));
             _windows.Add(new LoginScreen(_textureLibrary, _fontLibrary, _apiClient));
             _windows.Add(new LobbyBrowser(_textureLibrary, _fontLibrary, _apiClient));
             _windows.Add(new CreateLobbyForm(_textureLibrary, _fontLibrary, _apiClient));
+            _windows.Add(new Leaderboard(_textureLibrary, _fontLibrary, _apiClient));
         }
 
         protected override void Update(GameTime gameTime)
@@ -153,6 +154,10 @@ namespace AgeOfChess
                     }
 
                     _windows.RemoveAll(e => e is Game);
+                }
+                else if (_appUIState == AppUIState.ViewingLeaderboard)
+                {
+                    ((Leaderboard)_windows.Single(e => e is Leaderboard)).IsRefreshed = false;
                 }
 
                 IUiWindow newActiveWindow = GetActiveUiWindow();

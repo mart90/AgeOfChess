@@ -11,7 +11,7 @@ namespace AgeOfChess
     {
         public int Id { get; set; }
 
-        private bool _disableGameplayUi;
+        private bool _gameplayUiDisabled;
         private int _ourBid;
         private readonly User _us;
         private User _opponent;
@@ -41,6 +41,8 @@ namespace AgeOfChess
 
             MapGenerator mapGenerator = new MapGenerator(textureLibrary, 12);
 
+            // TODO we're incorrectly remembering the map seed from the previous game?
+
             if (settings.MapSeed != null)
             {
                 Map = mapGenerator.GenerateFromSeed(settings.MapSeed);
@@ -64,6 +66,10 @@ namespace AgeOfChess
                     new TextBox(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 55, 335, 40, 25), TextBoxType.Bid, "Bid:", "10"),
                     new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 105, 332, 65, 30), ButtonType.SubmitBid, "Submit")
                 });
+            }
+            else
+            {
+                Black.Gold = 10;
             }
 
             if (settings.TimeControlEnabled)
@@ -99,7 +105,7 @@ namespace AgeOfChess
                 return;
             }
 
-            if (State == GameState.Bidding && !_disableGameplayUi)
+            if (State == GameState.Bidding && !_gameplayUiDisabled)
             {
                 if (uiPart == null)
                 {
@@ -110,14 +116,14 @@ namespace AgeOfChess
                 {
                     SubmitBid();
                     State = GameState.WaitingForOpponentBid;
-                    _disableGameplayUi = true;
+                    _gameplayUiDisabled = true;
                 }
                 else if (uiPart is TextBox tb && tb.Type == TextBoxType.Bid)
                 {
                     tb.Focus();
                 }
             }
-            else if (!_disableGameplayUi)
+            else if (!_gameplayUiDisabled)
             {
                 base.ClickUiPartByLocation(location);
             }
@@ -181,7 +187,7 @@ namespace AgeOfChess
                 _apiClient.SetResult(Id, Result);
             }
 
-            _disableGameplayUi = true;
+            _gameplayUiDisabled = true;
             
             GameEnded = true;
         }
@@ -221,16 +227,16 @@ namespace AgeOfChess
                 if (OurColor.IsWhite)
                 {
                     _apiClient.SetWhite(Id);
-                    _disableGameplayUi = false;
+                    _gameplayUiDisabled = false;
                     UiParts.Single(e => e is Button btn && btn.Type == ButtonType.Resign).IsEnabled = true;
                 }
                 else
                 {
-                    _disableGameplayUi = true;
+                    _gameplayUiDisabled = true;
                 }
             }
 
-            if (!_disableGameplayUi || GameEnded)
+            if (!_gameplayUiDisabled || GameEnded)
             {
                 return;
             }
@@ -258,7 +264,7 @@ namespace AgeOfChess
                         PushOurTimeToServer();
                     }
 
-                    _disableGameplayUi = !OurColor.IsWhite;
+                    _gameplayUiDisabled = !OurColor.IsWhite;
 
                     _lastPoll = DateTime.Now.AddMinutes(-1);
 
@@ -310,7 +316,7 @@ namespace AgeOfChess
                     {
                         MakeOpponentMove(dto.ToMove());
 
-                        _disableGameplayUi = false;
+                        _gameplayUiDisabled = false;
 
                         if (TimeControlEnabled)
                         {
@@ -434,7 +440,7 @@ namespace AgeOfChess
             if (previousActiveColor == OurColor)
             {
                 PushOurMoveToServer();
-                _disableGameplayUi = true;
+                _gameplayUiDisabled = true;
 
                 UiParts.Single(e => e is Button btn && btn.Type == ButtonType.Resign).IsEnabled = false;
             }
@@ -454,8 +460,8 @@ namespace AgeOfChess
             Colors.Single(e => e.IsWhite == weAreWhite).IsUs = true;
             Black.Gold = _ourBid;
 
-            OurColor.PlayedByStr = $"{_us.Username} ({_us.LastElo})";
-            OpponentColor.PlayedByStr = $"{_opponent.Username} ({_opponent.LastElo})";
+            OurColor.PlayedByStr = $"{_us.Username} ({Math.Round(_us.LastElo)})";
+            OpponentColor.PlayedByStr = $"{_opponent.Username} ({Math.Round(_opponent.LastElo)})";
         }
 
         private void SetColorsAfterBidding(int opponentBid)
@@ -469,8 +475,8 @@ namespace AgeOfChess
                 Colors.Single(e => e.IsWhite == _ourBid > opponentBid).IsUs = true;
                 Black.Gold = _ourBid > opponentBid ? _ourBid : opponentBid;
 
-                OurColor.PlayedByStr = $"{_us.Username} ({_us.LastElo})";
-                OpponentColor.PlayedByStr = $"{_opponent.Username} ({_opponent.LastElo})";
+                OurColor.PlayedByStr = $"{_us.Username} ({Math.Round(_us.LastElo)})";
+                OpponentColor.PlayedByStr = $"{_opponent.Username} ({Math.Round(_opponent.LastElo)})";
             }
 
             if (OurColor.IsWhite)

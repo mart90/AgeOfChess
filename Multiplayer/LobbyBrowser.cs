@@ -174,7 +174,7 @@ namespace AgeOfChess
             stopHostingButton.IsEnabled = CreatedLobby != null;
 
             spriteBatch.DrawString(_fontLibrary.DefaultFontBold, "------------- Open lobbies -------------", new Vector2(20, 20), Color.Black);
-            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Logged in as: {_apiClient.AuthenticatedUser.Username} ({_apiClient.AuthenticatedUser.LastElo})", new Vector2(280, 20), Color.Black);
+            spriteBatch.DrawString(_fontLibrary.DefaultFont, $"Logged in as: {_apiClient.AuthenticatedUser.Username} ({Math.Round(_apiClient.AuthenticatedUser.LastElo)})", new Vector2(280, 20), Color.Black);
 
             for (int rowNumber = 0; rowNumber < Lobbies.Count; rowNumber++)
             {
