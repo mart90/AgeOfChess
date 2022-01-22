@@ -73,7 +73,7 @@ namespace AgeOfChess
                     TextNotification = new TextNotification
                     {
                         Color = Color.Red,
-                        Message = "Server is running a newer version. Get the latest from the discord"
+                        Message = "Version mismatch. Get the latest from the discord (see DiscordLink.txt)"
                     };
                 }
                 else
