@@ -97,6 +97,13 @@ namespace AgeOfChess
                 return;
             }
 
+            var lobby = Lobbies[lobbyIndex];
+
+            if (lobby.Id == CreatedLobby?.Id)
+            {
+                return;
+            }
+
             Lobbies[lobbyIndex].IsSelected = true;
         }
 
@@ -141,6 +148,8 @@ namespace AgeOfChess
             {
                 Id = _apiClient.GetGameId(CreatedLobby.Id)
             };
+
+            CreatedLobby.Settings.MapSeed = null; // Also sets it to null on the create lobby form (for next game)
 
             Thread.Sleep(1000);
 

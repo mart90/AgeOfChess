@@ -67,10 +67,6 @@ namespace AgeOfChess
                     new Button(textureLibrary, fontLibrary, new Rectangle(ControlPanelStartsAtX + 105, 332, 65, 30), ButtonType.SubmitBid, "Submit")
                 });
             }
-            else
-            {
-                Black.Gold = 10;
-            }
 
             if (settings.TimeControlEnabled)
             {
@@ -458,7 +454,6 @@ namespace AgeOfChess
             bool weAreWhite = Id % 2 == 1 ? _us.Id > _opponent.Id : _us.Id < _opponent.Id;
 
             Colors.Single(e => e.IsWhite == weAreWhite).IsUs = true;
-            Black.Gold = _ourBid;
 
             OurColor.PlayedByStr = $"{_us.Username} ({Math.Round(_us.LastElo)})";
             OpponentColor.PlayedByStr = $"{_opponent.Username} ({Math.Round(_opponent.LastElo)})";

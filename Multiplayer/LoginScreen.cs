@@ -74,6 +74,11 @@ namespace AgeOfChess
             string username = this.TextBoxValueByType(TextBoxType.Username);
             string plainTextPassword = this.TextBoxValueByType(TextBoxType.Password);
 
+            if (username == "" || plainTextPassword == "")
+            {
+                return;
+            }
+
             if (username.Length > 12)
             {
                 TextNotification = new TextNotification

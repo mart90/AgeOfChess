@@ -248,10 +248,7 @@ namespace AgeOfChess
             }
         }
 
-        protected virtual void HandleTimeRanOut(PieceColor color) 
-        {
-            // TODO Should we do anything regardless of whether it's multiplayer or single player?
-        }
+        protected virtual void HandleTimeRanOut(PieceColor color) { }
 
         private bool AttemptMovePiece(Point location)
         {

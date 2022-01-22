@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AgeOfChess
@@ -19,6 +20,16 @@ namespace AgeOfChess
         public IEnumerable<Square> FindLegalDestinationSquares(Piece piece, Square sourceSquare, bool checkingForChecks = false)
         {
             var legalSquares = new List<Square>();
+
+            if (!checkingForChecks)
+            {
+                (bool isPinned, List<Square> legalSquaresDespitePin) = CheckForPinToKing(sourceSquare, piece);
+
+                if (isPinned)
+                {
+                    return legalSquaresDespitePin;
+                }
+            }
 
             if (piece is Pawn)
             {
@@ -140,7 +151,7 @@ namespace AgeOfChess
             return legalAttacks;
         }
 
-        private IEnumerable<Square> FindLegalSquaresVector(Piece piece, Direction direction, Square sourceSquare, bool checkingForChecks, int? maxSteps = null)
+        private IEnumerable<Square> FindLegalSquaresVector(Piece piece, Direction direction, Square sourceSquare, bool checkingForChecks = false, int? maxSteps = null)
         {
             var legalSquares = new List<Square>();
 
@@ -149,17 +160,7 @@ namespace AgeOfChess
 
             while (stepsTaken != maxSteps)
             {
-                switch (direction)
-                {
-                    case Direction.North: currentSquare = _map.GetSquareByCoordinates(currentSquare.X, currentSquare.Y - 1); break;
-                    case Direction.NorthEast: currentSquare = _map.GetSquareByCoordinates(currentSquare.X + 1, currentSquare.Y - 1); break;
-                    case Direction.East: currentSquare = _map.GetSquareByCoordinates(currentSquare.X + 1, currentSquare.Y); break;
-                    case Direction.SouthEast: currentSquare = _map.GetSquareByCoordinates(currentSquare.X + 1, currentSquare.Y + 1); break;
-                    case Direction.South: currentSquare = _map.GetSquareByCoordinates(currentSquare.X, currentSquare.Y + 1); break;
-                    case Direction.SouthWest: currentSquare = _map.GetSquareByCoordinates(currentSquare.X - 1, currentSquare.Y + 1); break;
-                    case Direction.West: currentSquare = _map.GetSquareByCoordinates(currentSquare.X - 1, currentSquare.Y); break;
-                    case Direction.NorthWest: currentSquare = _map.GetSquareByCoordinates(currentSquare.X - 1, currentSquare.Y - 1); break;
-                }
+                currentSquare = GetNextSquare(currentSquare, direction);
 
                 if (currentSquare == null)
                 {
@@ -205,6 +206,205 @@ namespace AgeOfChess
             }
 
             return legalSquares;
+        }
+
+        private Square GetNextSquare(Square sourceSquare, Direction direction)
+        {
+            return direction switch
+            {
+                Direction.North => _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y - 1),
+                Direction.NorthEast => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y - 1),
+                Direction.East => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y),
+                Direction.SouthEast => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y + 1),
+                Direction.South => _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y + 1),
+                Direction.SouthWest => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y + 1),
+                Direction.West => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y),
+                Direction.NorthWest => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y - 1),
+                _ => null,
+            };
+        }
+
+        /// <summary>
+        /// If the piece is pinned to its own king, it can't move except on that file/diagonal
+        /// </summary>
+        private (bool isPinned, List<Square> legalMovesDespitePin) CheckForPinToKing(Square sourceSquare, Piece piece)
+        {
+            if (sourceSquare.Type == SquareType.DirtMine
+                || sourceSquare.Type == SquareType.GrassMine
+                || sourceSquare.Type == SquareType.DirtTrees
+                || sourceSquare.Type == SquareType.GrassTrees)
+            {
+                return (false, null);
+            }
+
+            var allDirections = new List<Direction>
+            {
+                Direction.North,
+                Direction.NorthEast,
+                Direction.East,
+                Direction.SouthEast,
+                Direction.South,
+                Direction.SouthWest,
+                Direction.West,
+                Direction.NorthWest
+            };
+
+            Direction? kingDirection = null;
+
+            foreach (Direction direction in allDirections)
+            {
+                if (IsKingFile(sourceSquare, piece.IsWhite, direction))
+                {
+                    kingDirection = direction;
+                }
+            }
+
+            if (kingDirection == null)
+            {
+                return (false, null);
+            }
+
+            Direction oppositeDirection = (int)kingDirection.Value <= 3 ? kingDirection.Value + 4 : kingDirection.Value - 4;
+
+            if (!FileHasPinningPiece(sourceSquare, !piece.IsWhite, oppositeDirection))
+            {
+                return (false, null);
+            }
+
+            if (piece is Knight)
+            {
+                return (true, new List<Square>());
+            }
+
+            var legalSquares = new List<Square>();
+
+            if (piece is Queen)
+            {
+                legalSquares.AddRange(FindLegalSquaresVector(piece, kingDirection.Value, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, oppositeDirection, sourceSquare));
+            }
+            else if (piece is Rook && (int)kingDirection.Value % 2 == 0)
+            {
+                legalSquares.AddRange(FindLegalSquaresVector(piece, kingDirection.Value, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, oppositeDirection, sourceSquare));
+            }
+            else if (piece is Bishop && (int)kingDirection.Value % 2 == 1)
+            {
+                legalSquares.AddRange(FindLegalSquaresVector(piece, kingDirection.Value, sourceSquare));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, oppositeDirection, sourceSquare));
+            }
+            else if (piece is Pawn && (int)kingDirection.Value % 2 == 0)
+            {
+                legalSquares.AddRange(FindLegalSquaresVector(piece, kingDirection.Value, sourceSquare, false, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, oppositeDirection, sourceSquare, false, 1));
+
+                legalSquares.RemoveAll(e => e.Object != null && e.Object is Piece);
+            }
+            else if (piece is Pawn && (int)kingDirection.Value % 2 == 1)
+            {
+                legalSquares.AddRange(FindLegalSquaresVector(piece, kingDirection.Value, sourceSquare, false, 1));
+                legalSquares.AddRange(FindLegalSquaresVector(piece, oppositeDirection, sourceSquare, false, 1));
+
+                legalSquares.RemoveAll(e => e.Object == null || !(e.Object is Piece occupyingPiece && occupyingPiece.IsWhite != piece.IsWhite));
+            }
+
+            return (true, legalSquares);
+        }
+
+        private bool IsKingFile(Square sourceSquare, bool kingIsWhite, Direction direction)
+        {
+            var currentSquare = sourceSquare;
+
+            while (true)
+            {
+                currentSquare = GetNextSquare(currentSquare, direction);
+
+                if (currentSquare == null)
+                {
+                    return false;
+                }
+
+                if (currentSquare.Type == SquareType.DirtRocks 
+                    || currentSquare.Type == SquareType.GrassRocks)
+                {
+                    return false;
+                }
+
+                if (currentSquare.Object != null)
+                {
+                    if (currentSquare.Object is King king && king.IsWhite == kingIsWhite)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                if (currentSquare.Type == SquareType.DirtMine
+                    || currentSquare.Type == SquareType.GrassMine
+                    || currentSquare.Type == SquareType.DirtTrees
+                    || currentSquare.Type == SquareType.GrassTrees)
+                {
+                    return false;
+                }
+            }
+        }
+
+        private bool FileHasPinningPiece(Square sourceSquare, bool pinningPieceIsWhite, Direction direction)
+        {
+            var currentSquare = sourceSquare;
+
+            while (true)
+            {
+                currentSquare = GetNextSquare(currentSquare, direction);
+
+                if (currentSquare == null)
+                {
+                    return false;
+                }
+
+                if (currentSquare.Type == SquareType.DirtRocks || currentSquare.Type == SquareType.GrassRocks)
+                {
+                    return false;
+                }
+
+                if (currentSquare.Object != null)
+                {
+                    if (currentSquare.Object is Piece piece && piece.IsWhite == pinningPieceIsWhite)
+                    {
+                        if (piece is Queen)
+                        {
+                            return true;
+                        }
+
+                        if (direction == Direction.North
+                            || direction == Direction.South
+                            || direction == Direction.East
+                            || direction == Direction.West)
+                        {
+                            return piece is Rook;
+                        }
+                        
+                        if (direction == Direction.NorthEast
+                            || direction == Direction.SouthEast
+                            || direction == Direction.SouthWest
+                            || direction == Direction.NorthWest)
+                        {
+                            return piece is Bishop;
+                        }
+                    }
+
+                    return false;
+                }
+
+                if (currentSquare.Type == SquareType.DirtMine
+                    || currentSquare.Type == SquareType.GrassMine
+                    || currentSquare.Type == SquareType.DirtTrees
+                    || currentSquare.Type == SquareType.GrassTrees)
+                {
+                    return false;
+                }
+            }
         }
     }
 }
