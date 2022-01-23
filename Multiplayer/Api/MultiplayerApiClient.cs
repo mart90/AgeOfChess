@@ -9,7 +9,7 @@ namespace AgeOfChess
 {
     class MultiplayerApiClient
     {
-        const string OUR_VERSION = "0.4";
+        const string OUR_VERSION = "0.5";
 
         public User AuthenticatedUser { get; set; }
 
