@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace AgeOfChess
 {
@@ -7,8 +8,15 @@ namespace AgeOfChess
         [STAThread]
         static void Main()
         {
-            using (var game = new UIController())
-                game.Run();
+            try
+            {
+                using (var game = new UIController())
+                    game.Run();
+            }
+            catch (Exception e)
+            {
+                File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory.ToString() + "/ErrorLog.txt", e.ToString());
+            }
         }
     }
 }

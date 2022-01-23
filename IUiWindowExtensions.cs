@@ -21,7 +21,7 @@ namespace AgeOfChess
 
             // Matched multiple UI parts. Find which center we are nearest
             return matchedParts
-                .Where(e => Math.Abs(location.Y - e.Center.Y) == matchedParts.Min(e => Math.Abs(location.Y - e.Center.Y)))
+                .Where(e => Math.Abs(location.Y - e.Center.Y) == matchedParts.Min(m => Math.Abs(location.Y - m.Center.Y)))
                 .Single();
         }
 
@@ -41,7 +41,7 @@ namespace AgeOfChess
 
             if (args.Key == Microsoft.Xna.Framework.Input.Keys.Back && focusedTextBox.Text != "")
             {
-                focusedTextBox.Text = focusedTextBox.Text[0..^1];
+                focusedTextBox.Text = focusedTextBox.Text.Substring(0, focusedTextBox.Text.Length - 1);
             }
             else if (char.IsLetterOrDigit(args.Character))
             {

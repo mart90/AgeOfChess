@@ -44,35 +44,35 @@ namespace AgeOfChess
             ObjectCaptured = objectCaptured;
         }
 
-        public Move(string notation)
-        {
-            string sourceSquare = null;
-            string destinationSquare = null;
+        //public Move(string notation)
+        //{
+        //    string sourceSquare = null;
+        //    string destinationSquare = null;
 
-            if (!notation.Contains("x") && !notation.Contains("-"))
-            {
-                // Placed piece
-                destinationSquare = notation[0..^1];
-                PiecePlaced = notation[^1..];
-            }
-            else if (notation.Contains("x"))
-            {
-                sourceSquare = notation.Split('x')[0];
-                destinationSquare = notation.Split('x')[1];
-            }
-            else if (notation.Contains("-"))
-            {
-                sourceSquare = notation.Split('-')[0];
-                destinationSquare = notation.Split('-')[1];
-            }
+        //    if (!notation.Contains("x") && !notation.Contains("-"))
+        //    {
+        //        // Placed piece
+        //        destinationSquare = notation[0..^1];
+        //        PiecePlaced = notation[^1..];
+        //    }
+        //    else if (notation.Contains("x"))
+        //    {
+        //        sourceSquare = notation.Split('x')[0];
+        //        destinationSquare = notation.Split('x')[1];
+        //    }
+        //    else if (notation.Contains("-"))
+        //    {
+        //        sourceSquare = notation.Split('-')[0];
+        //        destinationSquare = notation.Split('-')[1];
+        //    }
 
-            if (sourceSquare != null)
-            {
-                (SourceSquareX, SourceSquareY) = SquareStringToXY(sourceSquare);
-            }
+        //    if (sourceSquare != null)
+        //    {
+        //        (SourceSquareX, SourceSquareY) = SquareStringToXY(sourceSquare);
+        //    }
 
-            (DestinationSquareX, DestinationSquareY) = SquareStringToXY(destinationSquare);
-        }
+        //    (DestinationSquareX, DestinationSquareY) = SquareStringToXY(destinationSquare);
+        //}
 
         public string ToNotation()
         {
@@ -113,7 +113,7 @@ namespace AgeOfChess
         private static (int x, int y) SquareStringToXY(string squareString)
         {
             int x = LetterToX(squareString[0]);
-            int y = int.Parse(squareString[1..]);
+            int y = int.Parse(squareString.Substring(1));
 
             return (x, y);
         }

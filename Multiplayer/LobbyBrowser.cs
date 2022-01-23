@@ -109,7 +109,20 @@ namespace AgeOfChess
 
         private void Refresh()
         {
+            Lobby selectedLobby = Lobbies.SingleOrDefault(e => e.IsSelected);
+
             Lobbies = _apiClient.GetActiveLobbies();
+
+            if (selectedLobby != null)
+            {
+                Lobby selectedLobbyNew = Lobbies.SingleOrDefault(e => e.Id == selectedLobby.Id);
+
+                if (selectedLobbyNew != null)
+                {
+                    selectedLobbyNew.IsSelected = true;
+                }
+            }
+
             LastRefresh = DateTime.Now;
         }
 

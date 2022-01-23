@@ -79,7 +79,7 @@ namespace AgeOfChess
                 GameSettings.TimeControlEnabled = !GameSettings.TimeControlEnabled;
 
                 var buttons = UiParts
-                    .Where(e => e is Button button && new List<ButtonType>
+                    .Where(e => e is Button btn && new List<ButtonType>
                     {
                         ButtonType.StartTimeMinutesPlus1,
                         ButtonType.StartTimeMinutesPlus10,
@@ -90,7 +90,7 @@ namespace AgeOfChess
                         ButtonType.TimeIncrementSecondsMinus1,
                         ButtonType.TimeIncrementSecondsMinus10
                     }
-                    .Contains(button.Type));
+                    .Contains(btn.Type));
 
                 if (!GameSettings.TimeControlEnabled)
                 {

@@ -29,7 +29,7 @@ namespace AgeOfChess
 
         public bool RunningLatestVersion()
         {
-            string serverVersion = Get("latest_version");
+            string serverVersion = Post("latest_version");
 
             return OUR_VERSION == serverVersion;
         }
@@ -37,7 +37,7 @@ namespace AgeOfChess
         public void RegisterUser(string username, string plainTextPassword)
         {
             string password = HashPassword(plainTextPassword);
-            int userId = int.Parse(Get("register_user", new { username, password }));
+            int userId = int.Parse(Post("register_user", new { username, password }));
 
             AuthenticatedUser = new User
             {
@@ -50,7 +50,7 @@ namespace AgeOfChess
 
         public int? GetUserIdByName(string username)
         {
-            string result = Get("get_user_id_by_name", new { username });
+            string result = Post("get_user_id_by_name", new { username });
             return result != null ? int.Parse(result) : (int?)null;
         }
 
@@ -61,7 +61,7 @@ namespace AgeOfChess
                 password = HashPassword(plainTextPassword);
             }
 
-            string result = Get("login", new { username, password });
+            string result = Post("login", new { username, password });
 
             if (result == null)
             {
@@ -88,7 +88,7 @@ namespace AgeOfChess
 
         public int CreateLobby(MultiplayerGameSettings settings)
         {
-            string result = Get("create_lobby", new
+            string result = Post("create_lobby", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -108,7 +108,7 @@ namespace AgeOfChess
 
         public void CancelLobby(int id)
         {
-            Get("cancel_lobby", new 
+            Post("cancel_lobby", new 
             { 
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -118,7 +118,7 @@ namespace AgeOfChess
 
         public int JoinLobby(Lobby lobby)
         {
-            string result = Get("join_lobby", new
+            string result = Post("join_lobby", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -131,7 +131,7 @@ namespace AgeOfChess
 
         public string GetGeneratedMapSeed(int lobbyId)
         {
-            return Get("get_generated_seed", new
+            return Post("get_generated_seed", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -141,7 +141,7 @@ namespace AgeOfChess
 
         public int GetGameId(int lobbyId)
         {
-            string result = Get("get_game_id", new
+            string result = Post("get_game_id", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -153,7 +153,7 @@ namespace AgeOfChess
 
         public User GetOpponent(int gameId)
         {
-            string result = Get("get_opponent", new
+            string result = Post("get_opponent", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -165,7 +165,7 @@ namespace AgeOfChess
 
         public void MakeBid(int gameId, int bid)
         {
-            Get("make_bid", new
+            Post("make_bid", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -176,7 +176,7 @@ namespace AgeOfChess
 
         public void SetWhite(int gameId)
         {
-            Get("set_white", new
+            Post("set_white", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -186,7 +186,7 @@ namespace AgeOfChess
 
         public void SetTime(bool isWhite, int gameId, int timeMs)
         {
-            Get("set_time", new
+            Post("set_time", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -198,7 +198,7 @@ namespace AgeOfChess
 
         public PlayerTimesDto GetTimes(int gameId)
         {
-            string result = Get("get_player_times", new
+            string result = Post("get_player_times", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -210,7 +210,7 @@ namespace AgeOfChess
 
         public List<Lobby> GetActiveLobbies()
         {
-            string result = Get("get_open_lobbies", new 
+            string result = Post("get_open_lobbies", new 
             { 
                 username = AuthenticatedUser.Username, 
                 password = AuthenticatedUser.Password 
@@ -228,7 +228,7 @@ namespace AgeOfChess
 
         public PollLatestMoveDto LatestMove(int gameId)
         {
-            string result = Get("poll_last_move", new
+            string result = Post("poll_last_move", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -245,7 +245,7 @@ namespace AgeOfChess
 
         public void MakeMove(MakeMoveDto dto)
         {
-            Get("make_move", new
+            Post("make_move", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -263,7 +263,7 @@ namespace AgeOfChess
 
         public void SetResult(int gameId, string result)
         {
-            Get("set_result", new
+            Post("set_result", new
             {
                 username = AuthenticatedUser.Username,
                 password = AuthenticatedUser.Password,
@@ -274,7 +274,7 @@ namespace AgeOfChess
 
         public LeaderboardDto GetLeaderboard()
         {
-            string result = Get("get_leaderboard", new
+            string result = Post("get_leaderboard", new
             {
                 userId = AuthenticatedUser?.Id
             });
@@ -282,7 +282,7 @@ namespace AgeOfChess
             return JsonConvert.DeserializeObject<LeaderboardDto>(result);
         }
 
-        private string Get(string url, object convertableObject = null)
+        private string Post(string url, object convertableObject = null)
         {
             HttpRequestMessage request;
             if (convertableObject != null)
@@ -290,11 +290,11 @@ namespace AgeOfChess
                 var jsonString = JsonConvert.SerializeObject(convertableObject);
                 var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
 
-                request = new HttpRequestMessage(HttpMethod.Get, url) { Content = content };
+                request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
             }
             else
             {
-                request = new HttpRequestMessage(HttpMethod.Get, url);
+                request = new HttpRequestMessage(HttpMethod.Post, url);
             }
 
             var response = _client.SendAsync(request).Result;
@@ -305,16 +305,18 @@ namespace AgeOfChess
 
         private string HashPassword(string password)
         {
-            using System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
-            byte[] inputBytes = Encoding.UTF8.GetBytes(password);
-            byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
             {
-                sb.Append(hashBytes[i].ToString("X2"));
+                byte[] inputBytes = Encoding.UTF8.GetBytes(password);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
             }
-            return sb.ToString();
         }
     }
 }

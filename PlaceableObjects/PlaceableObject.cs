@@ -16,7 +16,7 @@ namespace AgeOfChess
 
         public void Draw(SpriteBatch spriteBatch, Rectangle location)
         {
-            spriteBatch.Draw(Texture, location, Microsoft.Xna.Framework.Color.White);
+            spriteBatch.Draw(Texture, location, Color.White);
         }
     }
 }

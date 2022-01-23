@@ -138,7 +138,7 @@ namespace AgeOfChess
                 }
                 else if (colorsWithWinningGold.Select(e => e.Gold).Distinct().Count() == 2) // Else players are on equal gold
                 {
-                    winningColor = colorsWithWinningGold.Single(e => e.Gold == colorsWithWinningGold.Max(e => e.Gold));
+                    winningColor = colorsWithWinningGold.Single(e => e.Gold == colorsWithWinningGold.Max(c => c.Gold));
                 }
 
                 if (winningColor != null)
@@ -157,8 +157,10 @@ namespace AgeOfChess
             var pathFinder = new PathFinder(Map);
 
             Square activeKingSquare = Map.Squares.Single(e => e.Object is King king && king.IsWhite == ActiveColor.IsWhite);
+
             var activeKingLegalMoves = pathFinder.FindLegalDestinationSquares((King)activeKingSquare.Object, activeKingSquare);
-            var legalCheckSquares = pathFinder.FindChecksForColor(!ActiveColor.IsWhite);
+
+            var legalCheckSquares = pathFinder.FindAttacksForColor(!ActiveColor.IsWhite);
 
             if (legalCheckSquares.Contains(activeKingSquare))
             {
@@ -252,8 +254,6 @@ namespace AgeOfChess
 
         private bool AttemptMovePiece(Point location)
         {
-            // TODO check for illegal moves where a piece is moved and it's a discovered check on our own king
-
             var destinationSquare = GetSquareByLocation(location);
             var sourceSquare = Map.SelectedSquare;
 
@@ -302,7 +302,9 @@ namespace AgeOfChess
 
             var destinationSquare = GetSquareByLocation(location);
 
-            if (destinationSquare != null && FindLegalDestinationsForPiecePlacement(pieceType == typeof(Pawn)).Contains(destinationSquare))
+            var pathFinder = new PathFinder(Map);
+
+            if (destinationSquare != null && pathFinder.FindLegalDestinationsForPiecePlacement(ActiveColor.IsWhite, pieceType == typeof(Pawn)).Contains(destinationSquare))
             {
                 PlacePiece(destinationSquare, pieceType);
                 return true;
@@ -342,37 +344,6 @@ namespace AgeOfChess
 
             var placePieceButton = (PlacePieceButton)UiParts.Single(e => e is PlacePieceButton ppb && ppb.PieceType == pieceType);
             ActiveColor.Gold -= placePieceButton.PieceCost;
-        }
-
-        public IEnumerable<Square> FindLegalDestinationsForPiecePlacement(bool placingPawn = false)
-        {
-            var legalDestinations = new List<Square>();
-            var pathFinder = new PathFinder(Map);
-
-            Square activePlayerKingSquare = Map.Squares.Single(e => e.Object != null 
-                && e.Object is Piece piece 
-                && piece.IsWhite == ActiveColor.IsWhite 
-                && piece is King);
-
-            legalDestinations.AddRange(pathFinder.FindLegalPiecePlacementsAroundSquare(activePlayerKingSquare).ToList());
-
-            if (placingPawn)
-            {
-                List<Square> activePlayerOtherPieceSquares = Map.Squares
-                    .Where(e => e.Object != null
-                        && e.Object is Piece piece
-                        && piece.IsWhite == ActiveColor.IsWhite
-                        && !(piece is Pawn)
-                        && !(piece is King))
-                    .ToList();
-
-                foreach (Square square in activePlayerOtherPieceSquares)
-                {
-                    legalDestinations.AddRange(pathFinder.FindLegalPiecePlacementsAroundSquare(square));
-                }
-            }
-
-            return legalDestinations;
         }
 
         private void SelectSquareByLocation(Point location)
@@ -469,7 +440,9 @@ namespace AgeOfChess
                         Color = Color.Green
                     };
 
-                    foreach (Square square in FindLegalDestinationsForPiecePlacement(placePieceButton.PieceType == typeof(Pawn)))
+                    var pathFinder = new PathFinder(Map);
+
+                    foreach (Square square in pathFinder.FindLegalDestinationsForPiecePlacement(ActiveColor.IsWhite, placePieceButton.PieceType == typeof(Pawn)))
                     {
                         square.SetTemporaryColor(SquareColor.Purple);
                     }

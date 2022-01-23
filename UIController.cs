@@ -1,8 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace AgeOfChess
 {
@@ -81,6 +84,8 @@ namespace AgeOfChess
                     _graphics.PreferredBackBufferHeight = newActiveWindow.HeightPixels;
                     _graphics.PreferredBackBufferWidth = newActiveWindow.WidthPixels;
                     _graphics.ApplyChanges();
+
+                    BringToForeGround();
                 }
             }
 
@@ -98,6 +103,15 @@ namespace AgeOfChess
             }
 
             base.Update(gameTime);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        private void BringToForeGround()
+        {
+            Process[] processes = Process.GetProcessesByName("AgeOfChess");
+            SetForegroundWindow(processes[0].MainWindowHandle);
         }
 
         protected override void Draw(GameTime gameTime)

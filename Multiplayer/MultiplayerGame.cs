@@ -12,7 +12,7 @@ namespace AgeOfChess
         public int Id { get; set; }
 
         private bool _gameplayUiDisabled;
-        private int _ourBid;
+        private int? _ourBid;
         private readonly User _us;
         private User _opponent;
         private int _timeSpentBiddingMs;
@@ -455,6 +455,11 @@ namespace AgeOfChess
 
             Colors.Single(e => e.IsWhite == weAreWhite).IsUs = true;
 
+            if (_ourBid != null)
+            {
+                Black.Gold = _ourBid.Value;
+            }
+
             OurColor.PlayedByStr = $"{_us.Username} ({Math.Round(_us.LastElo)})";
             OpponentColor.PlayedByStr = $"{_opponent.Username} ({Math.Round(_opponent.LastElo)})";
         }
@@ -468,7 +473,7 @@ namespace AgeOfChess
             else
             {
                 Colors.Single(e => e.IsWhite == _ourBid > opponentBid).IsUs = true;
-                Black.Gold = _ourBid > opponentBid ? _ourBid : opponentBid;
+                Black.Gold = _ourBid.Value > opponentBid ? _ourBid.Value : opponentBid;
 
                 OurColor.PlayedByStr = $"{_us.Username} ({Math.Round(_us.LastElo)})";
                 OpponentColor.PlayedByStr = $"{_opponent.Username} ({Math.Round(_opponent.LastElo)})";

@@ -13,10 +13,6 @@ namespace AgeOfChess
             _map = map;
         }
 
-        /// <summary>
-        /// CheckingForChecks is for when we are finding legal moves for the OTHER player to see if we can move our king somewhere.
-        /// <br/>In that case we pretend we CAN capture our own pieces, and ignore the obstacle of the king we are checking so that it can't move away from us on that same diagonal or file.
-        /// </summary>
         public IEnumerable<Square> FindLegalDestinationSquares(Piece piece, Square sourceSquare, bool checkingForChecks = false)
         {
             var legalSquares = new List<Square>();
@@ -61,9 +57,9 @@ namespace AgeOfChess
                 legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.West, sourceSquare, checkingForChecks, 1));
                 legalSquares.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, sourceSquare, checkingForChecks, 1));
 
-                if (!checkingForChecks) // Prevents infinite recursion if 2 kings are facing off
+                if (!checkingForChecks) // Prevents infinite recursion
                 {
-                    legalSquares.RemoveAll(e => FindChecksForColor(!piece.IsWhite).Contains(e));
+                    legalSquares.RemoveAll(e => FindAttacksForColor(!piece.IsWhite).Contains(e));
                 }
             }
             else if (piece is Rook)
@@ -108,10 +104,84 @@ namespace AgeOfChess
                     || (!checkingForChecks && e.Object != null && e.Object is Piece occupyingPiece && occupyingPiece.IsWhite == piece.IsWhite));
             }
 
+            if (!(piece is King) && !checkingForChecks) // Prevents infinite recursion
+            {
+                Square kingSquare = _map.Squares.Single(e => e.Object is King king && king.IsWhite == piece.IsWhite);
+
+                List<Square> checkingSquares = FindCheckingSourceSquares(kingSquare);
+
+                if (checkingSquares.Any())
+                {
+                    var tempList = legalSquares.ToList();
+
+                    foreach (var destinationSquare in legalSquares)
+                    {
+                        if (!DestinationFixesCheck(checkingSquares, destinationSquare, piece.IsWhite))
+                        {
+                            tempList.Remove(destinationSquare);
+                        }
+                    }
+
+                    legalSquares = tempList;
+                }
+            }
+
             return legalSquares;
         }
 
-        public IEnumerable<Square> FindLegalPiecePlacementsAroundSquare(Square square)
+        public IEnumerable<Square> FindLegalDestinationsForPiecePlacement(bool pieceIsWhite, bool placingPawn = false, bool recurring = false)
+        {
+            var legalDestinations = new List<Square>();
+
+            Square activePlayerKingSquare = _map.Squares.Single(e => e.Object != null
+                && e.Object is Piece piece
+                && piece.IsWhite == pieceIsWhite
+                && piece is King);
+
+            legalDestinations.AddRange(FindLegalPiecePlacementsAroundSquare(activePlayerKingSquare).ToList());
+
+            if (placingPawn)
+            {
+                List<Square> activePlayerOtherPieceSquares = _map.Squares
+                    .Where(e => e.Object != null
+                        && e.Object is Piece piece
+                        && piece.IsWhite == pieceIsWhite
+                        && !(piece is Pawn)
+                        && !(piece is King))
+                    .ToList();
+
+                foreach (Square square in activePlayerOtherPieceSquares)
+                {
+                    legalDestinations.AddRange(FindLegalPiecePlacementsAroundSquare(square));
+                }
+            }
+
+            if (!recurring)
+            {
+                Square kingSquare = _map.Squares.Single(e => e.Object is King king && king.IsWhite == pieceIsWhite);
+
+                List<Square> checkingSquares = FindCheckingSourceSquares(kingSquare);
+
+                if (checkingSquares.Any())
+                {
+                    var tempList = legalDestinations.ToList();
+
+                    foreach (var destinationSquare in legalDestinations)
+                    {
+                        if (!DestinationFixesCheck(checkingSquares, destinationSquare, pieceIsWhite))
+                        {
+                            tempList.Remove(destinationSquare);
+                        }
+                    }
+
+                    legalDestinations = tempList;
+                }
+            }
+
+            return legalDestinations;
+        }
+
+        private IEnumerable<Square> FindLegalPiecePlacementsAroundSquare(Square square)
         {
             var legalSquares = new List<Square>();
 
@@ -127,7 +197,7 @@ namespace AgeOfChess
             return legalSquares.Where(e => e.Object == null);
         }
 
-        public IEnumerable<Square> FindChecksForColor(bool isWhite)
+        public IEnumerable<Square> FindAttacksForColor(bool isWhite)
         {
             var legalAttacks = new List<Square>();
 
@@ -151,6 +221,10 @@ namespace AgeOfChess
             return legalAttacks;
         }
 
+        /// <summary>
+        /// CheckingForChecks is for when we are finding legal moves for the OTHER player to see if we can move our king somewhere.
+        /// <br/>In that case we pretend we CAN capture our own pieces (recapture in case the king captures them), and ignore the obstacle of the king we are checking so that it can't move away from us on that same diagonal or file.
+        /// </summary>
         private IEnumerable<Square> FindLegalSquaresVector(Piece piece, Direction direction, Square sourceSquare, bool checkingForChecks = false, int? maxSteps = null)
         {
             var legalSquares = new List<Square>();
@@ -169,6 +243,23 @@ namespace AgeOfChess
 
                 if (currentSquare.Type == SquareType.DirtRocks || currentSquare.Type == SquareType.GrassRocks)
                 {
+                    break;
+                }
+
+                if (currentSquare.Type == SquareType.DirtMine
+                    || currentSquare.Type == SquareType.GrassMine
+                    || currentSquare.Type == SquareType.DirtTrees
+                    || currentSquare.Type == SquareType.GrassTrees)
+                {
+                    if (currentSquare.Object != null 
+                        && currentSquare.Object is Piece occupyingPiece 
+                        && occupyingPiece.IsWhite == piece.IsWhite
+                        && !checkingForChecks)
+                    {
+                        break;
+                    }
+
+                    legalSquares.Add(currentSquare);
                     break;
                 }
 
@@ -192,15 +283,6 @@ namespace AgeOfChess
                     break;
                 }
 
-                if (currentSquare.Type == SquareType.DirtMine
-                    || currentSquare.Type == SquareType.GrassMine
-                    || currentSquare.Type == SquareType.DirtTrees
-                    || currentSquare.Type == SquareType.GrassTrees)
-                {
-                    legalSquares.Add(currentSquare);
-                    break;
-                }
-
                 stepsTaken++;
                 legalSquares.Add(currentSquare);
             }
@@ -210,18 +292,108 @@ namespace AgeOfChess
 
         private Square GetNextSquare(Square sourceSquare, Direction direction)
         {
-            return direction switch
+            switch (direction)
             {
-                Direction.North => _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y - 1),
-                Direction.NorthEast => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y - 1),
-                Direction.East => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y),
-                Direction.SouthEast => _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y + 1),
-                Direction.South => _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y + 1),
-                Direction.SouthWest => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y + 1),
-                Direction.West => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y),
-                Direction.NorthWest => _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y - 1),
-                _ => null,
+                case Direction.North: return _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y - 1);
+                case Direction.NorthEast: return _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y - 1);
+                case Direction.East: return _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y);
+                case Direction.SouthEast: return _map.GetSquareByCoordinates(sourceSquare.X + 1, sourceSquare.Y + 1);
+                case Direction.South: return _map.GetSquareByCoordinates(sourceSquare.X, sourceSquare.Y + 1);
+                case Direction.SouthWest: return _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y + 1);
+                case Direction.West: return _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y);
+                case Direction.NorthWest: return _map.GetSquareByCoordinates(sourceSquare.X - 1, sourceSquare.Y - 1);
+                default: return null;
             };
+        }
+
+        private bool DestinationFixesCheck(List<Square> checkingSourceSquares, Square destinationSquare, bool kingIsWhite)
+        {
+            if (checkingSourceSquares.Count > 1)
+            {
+                // Only the king can move
+                return false;
+            }
+
+            if (destinationSquare == checkingSourceSquares[0])
+            {
+                return true;
+            }
+
+            Piece checkingPiece = (Piece)checkingSourceSquares[0].Object;
+
+            if (checkingPiece is Knight)
+            {
+                return false;
+            }
+
+            var allDirections = new List<Direction>
+            {
+                Direction.North,
+                Direction.NorthEast,
+                Direction.East,
+                Direction.SouthEast,
+                Direction.South,
+                Direction.SouthWest,
+                Direction.West,
+                Direction.NorthWest
+            };
+
+            Direction kingDirection = Direction.North;
+
+            foreach (Direction direction in allDirections)
+            {
+                if (IsKingFile(checkingSourceSquares[0], kingIsWhite, direction))
+                {
+                    kingDirection = direction;
+                }
+            }
+
+            var currentSquare = checkingSourceSquares[0];
+
+            while (!(currentSquare.Object is King))
+            {
+                currentSquare = GetNextSquare(currentSquare, kingDirection);
+
+                if (currentSquare == destinationSquare)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private List<Square> FindCheckingSourceSquares(Square kingSquare)
+        {
+            bool checkingColorIsWhite = !((Piece)kingSquare.Object).IsWhite;
+
+            var checkingSquares = new List<Square>();
+
+            foreach (Square pieceSquare in _map.Squares.Where(e => e.Object != null && e.Object is Piece piece && piece.IsWhite == checkingColorIsWhite))
+            {
+                var legalAttacks = new List<Square>();
+                
+                Piece piece = (Piece)pieceSquare.Object;
+
+                if (piece is Pawn)
+                {
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.NorthEast, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.SouthEast, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.SouthWest, pieceSquare, true, 1));
+                    legalAttacks.AddRange(FindLegalSquaresVector(piece, Direction.NorthWest, pieceSquare, true, 1));
+                }
+                else
+                {
+                    legalAttacks.AddRange(FindLegalDestinationSquares(piece, pieceSquare, true));
+                }
+
+                if (legalAttacks.Contains(kingSquare))
+                {
+                    checkingSquares.Add(pieceSquare);
+                }
+            }
+
+            return checkingSquares;
         }
 
         /// <summary>
