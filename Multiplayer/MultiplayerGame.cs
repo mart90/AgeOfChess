@@ -41,8 +41,6 @@ namespace AgeOfChess
 
             MapGenerator mapGenerator = new MapGenerator(textureLibrary, 12);
 
-            // TODO we're incorrectly remembering the map seed from the previous game?
-
             if (settings.MapSeed != null)
             {
                 Map = mapGenerator.GenerateFromSeed(settings.MapSeed);

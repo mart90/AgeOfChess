@@ -228,7 +228,7 @@ namespace AgeOfChess
             }
         }
 
-        public void Update(SpriteBatch spriteBatch)
+        public virtual void Update(SpriteBatch spriteBatch)
         {
             spriteBatch.DrawString(_fontLibrary.DefaultFontBold, "-------------------- Game settings --------------------", new Vector2(20, 20), Color.Black);
 

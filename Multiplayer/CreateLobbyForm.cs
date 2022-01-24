@@ -36,10 +36,11 @@ namespace AgeOfChess
 
         public MultiplayerGameSettings Settings => (MultiplayerGameSettings)GameSettings;
 
-        public void ClickUiPartByLocation(Point location)
+        public override void ClickUiPartByLocation(Point location)
         {
-            base.ClickUiPartByLocation(location);
             ClearSelection();
+
+            base.ClickUiPartByLocation(location);
 
             var uiPart = this.GetUiPartByLocation(location);
 
@@ -57,6 +58,8 @@ namespace AgeOfChess
                 if (button.Type == ButtonType.StartLobby)
                 {
                     CreateLobby();
+
+                    NewUiState = AppUIState.InLobbyBrowser;
                 }
                 else if (button.Type == ButtonType.Back)
                 {
@@ -103,7 +106,6 @@ namespace AgeOfChess
                 Id = _apiClient.CreateLobby(Settings),
                 Settings = Settings
             };
-            NewUiState = AppUIState.InLobbyBrowser;
         }
 
         public void ClearSelection()
@@ -116,7 +118,7 @@ namespace AgeOfChess
             }
         }
 
-        public void Update(SpriteBatch spriteBatch)
+        public override void Update(SpriteBatch spriteBatch)
         {
             base.Update(spriteBatch);
 

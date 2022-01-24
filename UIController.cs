@@ -29,7 +29,7 @@ namespace AgeOfChess
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            TargetElapsedTime = new System.TimeSpan(100000); // 100 updates p/s
+            TargetElapsedTime = new TimeSpan(100000); // 100 updates p/s
         }
 
         protected override void Initialize()
@@ -66,24 +66,16 @@ namespace AgeOfChess
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
-            var lobbyBrowser = (LobbyBrowser)_windows.Single(e => e is LobbyBrowser);
-
-            if (lobbyBrowser.CreatedLobby != null)
+            if (_appUIState == AppUIState.InLobbyBrowser)
             {
-                if (lobbyBrowser.PlayerJoinedMyLobby())
+                var lobbyBrowser = (LobbyBrowser)GetActiveUiWindow();
+                if (lobbyBrowser.NewUiState == AppUIState.InGame)
                 {
-                    lobbyBrowser.HandlePlayerJoined();
-                    _windows.Add(lobbyBrowser.CreatedGame);
                     _appUIState = AppUIState.InGame;
+                    _windows.Add(lobbyBrowser.CreatedGame);
+                    lobbyBrowser.NewUiState = null;
 
-                    IUiWindow newActiveWindow = GetActiveUiWindow();
-
-                    _graphics.PreferredBackBufferHeight = newActiveWindow.HeightPixels;
-                    _graphics.PreferredBackBufferWidth = newActiveWindow.WidthPixels;
-                    _graphics.ApplyChanges();
+                    RefreshDimensions();
 
                     BringToForeGround();
                 }
@@ -174,11 +166,7 @@ namespace AgeOfChess
                     ((Leaderboard)_windows.Single(e => e is Leaderboard)).IsRefreshed = false;
                 }
 
-                IUiWindow newActiveWindow = GetActiveUiWindow();
-
-                _graphics.PreferredBackBufferHeight = newActiveWindow.HeightPixels;
-                _graphics.PreferredBackBufferWidth = newActiveWindow.WidthPixels;
-                _graphics.ApplyChanges();
+                RefreshDimensions();
             }
         }
 
@@ -190,6 +178,15 @@ namespace AgeOfChess
         private void HandleTextInput(object sender, TextInputEventArgs args)
         {
             GetActiveUiWindow().ReceiveKeyboardInput(args);
+        }
+
+        private void RefreshDimensions()
+        {
+            IUiWindow activeWindow = GetActiveUiWindow();
+
+            _graphics.PreferredBackBufferHeight = activeWindow.HeightPixels;
+            _graphics.PreferredBackBufferWidth = activeWindow.WidthPixels;
+            _graphics.ApplyChanges();
         }
     }
 }

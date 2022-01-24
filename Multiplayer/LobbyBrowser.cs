@@ -69,6 +69,11 @@ namespace AgeOfChess
             {
                 if (button.Type == ButtonType.Back)
                 {
+                    if (CreatedLobby != null)
+                    {
+                        CancelLobby();
+                    }
+
                     NewUiState = AppUIState.InMenu;
                 }
                 else if (button.Type == ButtonType.CreateLobby)
@@ -83,6 +88,11 @@ namespace AgeOfChess
                 }
                 else if (button.Type == ButtonType.JoinLobby && selectedLobby != null)
                 {
+                    if (CreatedLobby != null)
+                    {
+                        CancelLobby();
+                    }
+
                     JoinLobby(selectedLobby);
                 }
             }
@@ -190,6 +200,12 @@ namespace AgeOfChess
             if ((DateTime.Now - LastRefresh).TotalSeconds > 5)
             {
                 Refresh();
+
+                if (CreatedLobby != null && PlayerJoinedMyLobby())
+                {
+                    HandlePlayerJoined();
+                    return;
+                }
             }
 
             IUiPart stopHostingButton = UiParts.Single(e => e is Button btn && btn.Type == ButtonType.CancelLobby);
