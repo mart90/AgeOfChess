@@ -126,7 +126,14 @@ namespace AgeOfChess
 
         public void SpawnKings()
         {
-            var whiteKingSquare = _map.GetRandomEmptySquare(0, _map.Height * _map.Width / 2 - 1);
+            Square whiteKingSquare = _map.GetRandomEmptySquare(0, _map.Height * _map.Width / 2 - 1);
+
+            // Prevents kings from spawning within striking distance of each other
+            while ((whiteKingSquare.X == _map.Width / 2 || whiteKingSquare.X == _map.Width / 2 - 1) && whiteKingSquare.Y == _map.Height / 2 - 1)
+            {
+                whiteKingSquare = _map.GetRandomEmptySquare(0, _map.Height * _map.Width / 2 - 1);
+            }
+
             whiteKingSquare.SetObject(new WhiteKing(_textureLibrary));
 
             var blackKingSquare = _map.Squares.Single(e => e.Id == _map.Height * _map.Width - 1 - whiteKingSquare.Id);
