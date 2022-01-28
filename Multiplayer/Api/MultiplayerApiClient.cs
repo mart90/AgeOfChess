@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AgeOfChess
 {
     class MultiplayerApiClient
     {
-        const string OUR_VERSION = "0.5";
+        const string OUR_VERSION = "0.6";
 
         public User AuthenticatedUser { get; set; }
 
